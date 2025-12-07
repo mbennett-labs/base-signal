@@ -22,7 +22,7 @@ export const minikitConfig = {
     name: "Base Signal",
     subtitle: "Market Intelligence Dashboard",
     description: "Track altseason signals, BTC dominance, and key market indicators in real-time.",
-    screenshotUrls: [], // We'll add these later
+    screenshotUrls: [`${ROOT_URL}/og.png`], // We'll add these later
     iconUrl: `${ROOT_URL}/icon.png`,
     splashImageUrl: `${ROOT_URL}/splash.png`,
     splashBackgroundColor: "#0052FF", // Base blue

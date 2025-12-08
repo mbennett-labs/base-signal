@@ -57,11 +57,41 @@ const OLD_COINS = [
   "zcash",
 ];
 
+type TabType = "signals" | "watchlist" | "about";
+
 export default function Home() {
   const { isFrameReady, setFrameReady, context } = useMiniKit();
   const [data, setData] = useState<MarketData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<TabType>("signals");
+  const [showOnboarding, setShowOnboarding] = useState(false);
+  const [isDarkMode, setIsDarkMode] = useState(true);
+
+  // Check for first visit
+  useEffect(() => {
+    const hasSeenOnboarding = localStorage.getItem("baseSignal_onboarded");
+    if (!hasSeenOnboarding) {
+      setShowOnboarding(true);
+    }
+  }, []);
+
+  // Check system color scheme preference
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
+      setIsDarkMode(mediaQuery.matches);
+      
+      const handler = (e: MediaQueryListEvent) => setIsDarkMode(e.matches);
+      mediaQuery.addEventListener("change", handler);
+      return () => mediaQuery.removeEventListener("change", handler);
+    }
+  }, []);
+
+  const dismissOnboarding = () => {
+    localStorage.setItem("baseSignal_onboarded", "true");
+    setShowOnboarding(false);
+  };
 
   // Initialize MiniKit
   useEffect(() => {
@@ -131,7 +161,7 @@ export default function Home() {
       );
       if (daysRemaining > 0 && daysRemaining <= 45) {
         score += 15;
-        signals.push(`⏳ ${daysRemaining} days remaining`);
+        signals.push(`⏳ ${daysRemaining} days to target`);
       } else if (daysRemaining > 45) {
         score += 5;
         signals.push(`📅 ${daysRemaining} days to target`);
@@ -149,17 +179,13 @@ export default function Home() {
     try {
       setError(null);
 
-      // Fetch main prices
       const pricesRes = await fetch(
         "https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&ids=bitcoin,ethereum,litecoin&order=market_cap_desc&sparkline=false&price_change_percentage=24h"
       );
-      
-      if (!pricesRes.ok) {
-        throw new Error("Failed to fetch prices");
-      }
-      
-      const pricesJson = await pricesRes.json();
 
+      if (!pricesRes.ok) throw new Error("Failed to fetch prices");
+
+      const pricesJson = await pricesRes.json();
       const prices: Record<string, PriceData> = {};
       for (const coin of pricesJson) {
         prices[coin.id] = {
@@ -170,19 +196,13 @@ export default function Home() {
         };
       }
 
-      // Small delay for rate limiting
       await new Promise((r) => setTimeout(r, 500));
 
-      // Fetch dominance
       const globalRes = await fetch("https://api.coingecko.com/api/v3/global");
-      
-      if (!globalRes.ok) {
-        throw new Error("Failed to fetch global data");
-      }
-      
+      if (!globalRes.ok) throw new Error("Failed to fetch global data");
+
       const globalJson = await globalRes.json();
       const globalData = globalJson.data;
-
       const btc_dom = globalData.market_cap_percentage?.btc || 0;
       const eth_dom = globalData.market_cap_percentage?.eth || 0;
 
@@ -190,27 +210,22 @@ export default function Home() {
         btc_dominance: btc_dom,
         eth_dominance: eth_dom,
         others_dominance: 100 - btc_dom - eth_dom,
-        stablecoin_dominance: 5.0, // Estimate
+        stablecoin_dominance: 5.0,
         total_market_cap: globalData.total_market_cap?.usd || 0,
       };
 
-      // Small delay
       await new Promise((r) => setTimeout(r, 500));
 
-      // Fetch old coins
       const oldCoinsRes = await fetch(
         `https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&ids=${OLD_COINS.join(",")}&order=market_cap_desc&sparkline=false&price_change_percentage=24h`
       );
-      
+
       const oldCoins: Record<string, OldCoinData> = {};
-      
       if (oldCoinsRes.ok) {
         const oldCoinsJson = await oldCoinsRes.json();
         for (const coin of oldCoinsJson) {
           const volMcapRatio =
-            coin.market_cap > 0
-              ? (coin.total_volume / coin.market_cap) * 100
-              : 0;
+            coin.market_cap > 0 ? (coin.total_volume / coin.market_cap) * 100 : 0;
           oldCoins[coin.id] = {
             symbol: coin.symbol.toUpperCase(),
             price: coin.current_price,
@@ -220,12 +235,8 @@ export default function Home() {
         }
       }
 
-      // Calculate score
       const btcPrice = prices.bitcoin?.price || null;
-      const [altseasonScore, signals] = calculateAltseasonScore(
-        dominance,
-        btcPrice
-      );
+      const [altseasonScore, signals] = calculateAltseasonScore(dominance, btcPrice);
 
       setData({
         prices,
@@ -243,59 +254,482 @@ export default function Home() {
     }
   }, [calculateAltseasonScore]);
 
-  // Initial fetch and refresh interval
   useEffect(() => {
     fetchData();
-    const interval = setInterval(fetchData, 60000); // Refresh every minute
+    const interval = setInterval(fetchData, 60000);
     return () => clearInterval(interval);
   }, [fetchData]);
 
-  // Days remaining calculation
+  // Theme colors
+  const theme = {
+    bg: isDarkMode ? "#0a0a0f" : "#f5f5f7",
+    bgCard: isDarkMode ? "rgba(255,255,255,0.03)" : "rgba(0,0,0,0.03)",
+    bgCardHover: isDarkMode ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.06)",
+    text: isDarkMode ? "#ffffff" : "#1a1a1a",
+    textSecondary: isDarkMode ? "#9ca3af" : "#6b7280",
+    textMuted: isDarkMode ? "#6b7280" : "#9ca3af",
+    border: isDarkMode ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.1)",
+    accent: "#3b82f6",
+    green: "#4ade80",
+    red: "#f87171",
+    yellow: "#facc15",
+  };
+
   const daysRemaining = Math.ceil(
     (TARGET_DATE.getTime() - Date.now()) / (1000 * 60 * 60 * 24)
   );
 
-  // Score styling helpers
   const getScoreColor = (score: number) => {
-    if (score >= 70) return "#4ade80"; // green
-    if (score >= 50) return "#facc15"; // yellow
-    return "#f87171"; // red
+    if (score >= 70) return theme.green;
+    if (score >= 50) return theme.yellow;
+    return theme.red;
   };
 
-  const getScoreBg = (score: number) => {
-    if (score >= 70) return "rgba(74, 222, 128, 0.1)";
-    if (score >= 50) return "rgba(250, 204, 21, 0.1)";
-    return "rgba(248, 113, 113, 0.1)";
+  // Onboarding Modal
+  const OnboardingModal = () => (
+    <div
+      style={{
+        position: "fixed",
+        inset: 0,
+        background: "rgba(0,0,0,0.8)",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        zIndex: 100,
+        padding: 16,
+      }}
+    >
+      <div
+        style={{
+          background: theme.bg,
+          borderRadius: 20,
+          padding: 24,
+          maxWidth: 340,
+          width: "100%",
+          border: `1px solid ${theme.border}`,
+        }}
+      >
+        <div style={{ textAlign: "center", marginBottom: 20 }}>
+          <span style={{ fontSize: 48 }}>📊</span>
+        </div>
+        <h2
+          style={{
+            color: theme.text,
+            fontSize: 22,
+            fontWeight: 700,
+            textAlign: "center",
+            marginBottom: 12,
+          }}
+        >
+          Welcome to Base Signal
+        </h2>
+        <p
+          style={{
+            color: theme.textSecondary,
+            fontSize: 14,
+            lineHeight: 1.6,
+            textAlign: "center",
+            marginBottom: 20,
+          }}
+        >
+          Your real-time altseason radar. We track BTC dominance, market structure, 
+          and historical patterns to calculate the probability of altseason conditions.
+        </p>
+        
+        <div
+          style={{
+            background: theme.bgCard,
+            borderRadius: 12,
+            padding: 16,
+            marginBottom: 20,
+          }}
+        >
+          <p style={{ color: theme.textSecondary, fontSize: 12, marginBottom: 8 }}>
+            <strong style={{ color: theme.text }}>How the score works:</strong>
+          </p>
+          <ul style={{ color: theme.textSecondary, fontSize: 12, paddingLeft: 16, margin: 0 }}>
+            <li style={{ marginBottom: 4 }}>BTC dominance falling below 61%</li>
+            <li style={{ marginBottom: 4 }}>Altcoin (&quot;Others&quot;) dominance rising</li>
+            <li style={{ marginBottom: 4 }}>Stablecoin capital rotating out</li>
+            <li style={{ marginBottom: 4 }}>BTC holding key support levels</li>
+          </ul>
+        </div>
+
+        <button
+          onClick={dismissOnboarding}
+          style={{
+            width: "100%",
+            padding: 16,
+            background: theme.accent,
+            border: "none",
+            borderRadius: 12,
+            color: "#fff",
+            fontSize: 16,
+            fontWeight: 600,
+            cursor: "pointer",
+            minHeight: 52,
+          }}
+        >
+          Got it, let&apos;s go!
+        </button>
+      </div>
+    </div>
+  );
+
+  // User Header Component
+  const UserHeader = () => (
+    <header
+      style={{
+        position: "sticky",
+        top: 0,
+        zIndex: 50,
+        background: isDarkMode ? "rgba(10, 10, 15, 0.95)" : "rgba(245, 245, 247, 0.95)",
+        backdropFilter: "blur(8px)",
+        borderBottom: `1px solid ${theme.border}`,
+        padding: "12px 16px",
+      }}
+    >
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+          {/* User Avatar */}
+          {context?.user?.pfpUrl ? (
+            <img
+              src={context.user.pfpUrl}
+              alt="Profile"
+              style={{
+                width: 36,
+                height: 36,
+                borderRadius: "50%",
+                border: `2px solid ${theme.accent}`,
+              }}
+            />
+          ) : (
+            <div
+              style={{
+                width: 36,
+                height: 36,
+                borderRadius: "50%",
+                background: theme.accent,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                fontSize: 16,
+              }}
+            >
+              👤
+            </div>
+          )}
+          <div>
+            <h1 style={{ fontSize: 16, fontWeight: 700, margin: 0, color: theme.text }}>
+              <span style={{ color: theme.accent }}>BASE</span> SIGNAL
+            </h1>
+            <p style={{ fontSize: 11, color: theme.textMuted, margin: 0 }}>
+              {context?.user?.displayName || context?.user?.username || "Welcome"}
+            </p>
+          </div>
+        </div>
+        <div style={{ textAlign: "right" }}>
+          <p style={{ fontSize: 10, color: theme.textMuted, margin: 0 }}>Target</p>
+          <p style={{ fontSize: 14, fontWeight: 600, color: theme.yellow, margin: 0 }}>
+            {daysRemaining}d
+          </p>
+        </div>
+      </div>
+    </header>
+  );
+
+  // Bottom Navigation
+  const BottomNav = () => (
+    <nav
+      style={{
+        position: "fixed",
+        bottom: 0,
+        left: 0,
+        right: 0,
+        background: isDarkMode ? "rgba(10, 10, 15, 0.98)" : "rgba(245, 245, 247, 0.98)",
+        backdropFilter: "blur(8px)",
+        borderTop: `1px solid ${theme.border}`,
+        padding: "8px 16px 24px",
+        zIndex: 50,
+      }}
+    >
+      <div style={{ display: "flex", justifyContent: "space-around" }}>
+        {[
+          { id: "signals" as TabType, icon: "📊", label: "Signals" },
+          { id: "watchlist" as TabType, icon: "👀", label: "Watchlist" },
+          { id: "about" as TabType, icon: "ℹ️", label: "About" },
+        ].map((tab) => (
+          <button
+            key={tab.id}
+            onClick={() => setActiveTab(tab.id)}
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              gap: 4,
+              padding: "8px 16px",
+              background: "transparent",
+              border: "none",
+              cursor: "pointer",
+              minWidth: 64,
+              minHeight: 48,
+              borderRadius: 12,
+              transition: "background 0.2s",
+            }}
+          >
+            <span style={{ fontSize: 20 }}>{tab.icon}</span>
+            <span
+              style={{
+                fontSize: 11,
+                fontWeight: activeTab === tab.id ? 600 : 400,
+                color: activeTab === tab.id ? theme.accent : theme.textSecondary,
+              }}
+            >
+              {tab.label}
+            </span>
+          </button>
+        ))}
+      </div>
+    </nav>
+  );
+
+  // Signals Tab Content
+  const SignalsTab = () => {
+    const score = data?.altseasonScore || 0;
+    const btcPrice = data?.prices.bitcoin?.price || 0;
+    const btcChange = data?.prices.bitcoin?.change_24h || 0;
+
+    return (
+      <div style={{ padding: 16, paddingBottom: 100 }}>
+        {/* Altseason Score */}
+        <div
+          style={{
+            borderRadius: 16,
+            padding: 20,
+            background: `linear-gradient(135deg, ${getScoreColor(score)}15 0%, ${getScoreColor(score)}05 100%)`,
+            border: `1px solid ${theme.border}`,
+            marginBottom: 16,
+          }}
+        >
+          <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 12 }}>
+            <span style={{ fontSize: 11, color: theme.textSecondary, textTransform: "uppercase", letterSpacing: 1 }}>
+              Altseason Probability
+            </span>
+            <span style={{ fontSize: 10, color: theme.textMuted }}>LIVE</span>
+          </div>
+          <div style={{ display: "flex", alignItems: "baseline", gap: 8, marginBottom: 16 }}>
+            <span style={{ fontSize: 48, fontWeight: 900, color: getScoreColor(score) }}>{score}</span>
+            <span style={{ fontSize: 24, color: theme.textMuted }}>%</span>
+          </div>
+          <div style={{ height: 8, background: theme.bgCard, borderRadius: 4, overflow: "hidden", marginBottom: 16 }}>
+            <div style={{ height: "100%", width: `${score}%`, background: getScoreColor(score), borderRadius: 4 }} />
+          </div>
+          {data?.signals.map((signal, i) => (
+            <p key={i} style={{ fontSize: 12, color: theme.textSecondary, margin: "4px 0" }}>{signal}</p>
+          ))}
+        </div>
+
+        {/* BTC Price */}
+        <div
+          style={{
+            borderRadius: 16,
+            padding: 16,
+            background: "linear-gradient(135deg, rgba(249,115,22,0.1) 0%, rgba(249,115,22,0.05) 100%)",
+            border: "1px solid rgba(249,115,22,0.2)",
+            marginBottom: 16,
+          }}
+        >
+          <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 8 }}>
+            <span style={{ fontSize: 12, color: theme.textSecondary }}>Bitcoin</span>
+            <span style={{ fontSize: 12, color: btcChange >= 0 ? theme.green : theme.red }}>
+              {btcChange >= 0 ? "+" : ""}{btcChange.toFixed(2)}%
+            </span>
+          </div>
+          <p style={{ fontSize: 24, fontWeight: 700, margin: 0, color: theme.text }}>
+            ${btcPrice.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+          </p>
+        </div>
+
+        {/* Critical Levels */}
+        <div style={{ borderRadius: 16, padding: 16, background: theme.bgCard, border: `1px solid ${theme.border}`, marginBottom: 16 }}>
+          <h2 style={{ fontSize: 11, color: theme.textSecondary, textTransform: "uppercase", letterSpacing: 1, marginBottom: 12, marginTop: 0 }}>
+            BTC Critical Levels
+          </h2>
+          {[
+            { label: "Bull Confirmation", price: BTC_LEVELS.bull_confirmation, check: btcPrice >= BTC_LEVELS.bull_confirmation },
+            { label: "Critical High", price: BTC_LEVELS.critical_high, check: btcPrice >= BTC_LEVELS.critical_high },
+            { label: "Critical Low", price: BTC_LEVELS.critical_low, check: btcPrice >= BTC_LEVELS.critical_low },
+            { label: "Breakdown", price: BTC_LEVELS.breakdown, check: btcPrice >= BTC_LEVELS.breakdown },
+          ].map((level) => (
+            <div key={level.label} style={{ display: "flex", justifyContent: "space-between", padding: "10px 0", borderBottom: `1px solid ${theme.border}` }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                <span style={{ fontSize: 16 }}>{level.check ? "✅" : "❌"}</span>
+                <span style={{ fontSize: 14, color: theme.textSecondary }}>{level.label}</span>
+              </div>
+              <span style={{ fontSize: 14, color: theme.textMuted }}>${level.price.toLocaleString()}</span>
+            </div>
+          ))}
+        </div>
+
+        {/* Dominance Grid */}
+        <div style={{ borderRadius: 16, padding: 16, background: theme.bgCard, border: `1px solid ${theme.border}` }}>
+          <h2 style={{ fontSize: 11, color: theme.textSecondary, textTransform: "uppercase", letterSpacing: 1, marginBottom: 12, marginTop: 0 }}>
+            Dominance Metrics
+          </h2>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+            {[
+              { label: "BTC Dom", value: `${data?.dominance.btc_dominance.toFixed(1)}%`, signal: (data?.dominance.btc_dominance || 100) < 61 ? "🟢 Falling" : "🔴 High", color: (data?.dominance.btc_dominance || 100) < 61 ? theme.green : theme.red },
+              { label: "Others Dom", value: `${data?.dominance.others_dominance.toFixed(1)}%`, signal: (data?.dominance.others_dominance || 0) > 30 ? "🟢 Rising" : "⏳ Building", color: (data?.dominance.others_dominance || 0) > 30 ? theme.green : theme.yellow },
+              { label: "ETH Dom", value: `${data?.dominance.eth_dominance.toFixed(1)}%`, signal: "", color: "" },
+              { label: "Total MCap", value: `$${((data?.dominance.total_market_cap || 0) / 1e12).toFixed(2)}T`, signal: "", color: "" },
+            ].map((item) => (
+              <div key={item.label} style={{ background: theme.bgCardHover, borderRadius: 12, padding: 12 }}>
+                <p style={{ fontSize: 10, color: theme.textMuted, margin: "0 0 4px 0" }}>{item.label}</p>
+                <p style={{ fontSize: 20, fontWeight: 700, margin: 0, color: theme.text }}>{item.value}</p>
+                {item.signal && <p style={{ fontSize: 10, margin: "4px 0 0 0", color: item.color }}>{item.signal}</p>}
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
   };
+
+  // Watchlist Tab Content
+  const WatchlistTab = () => (
+    <div style={{ padding: 16, paddingBottom: 100 }}>
+      <div style={{ marginBottom: 16 }}>
+        <h2 style={{ fontSize: 18, fontWeight: 700, color: theme.text, marginBottom: 4 }}>Old Coin Revival Watch</h2>
+        <p style={{ fontSize: 12, color: theme.textSecondary, margin: 0 }}>
+          Tracking historical coins for volume spikes and revival signals
+        </p>
+      </div>
+
+      {Object.entries(data?.oldCoins || {})
+        .sort((a, b) => b[1].change_24h - a[1].change_24h)
+        .map(([id, coin]) => {
+          const isHot = coin.change_24h > 15 && coin.vol_mcap_ratio > 15;
+          return (
+            <div
+              key={id}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                padding: 16,
+                marginBottom: 8,
+                borderRadius: 12,
+                background: isHot ? "rgba(249,115,22,0.1)" : theme.bgCard,
+                border: isHot ? "1px solid rgba(249,115,22,0.3)" : `1px solid ${theme.border}`,
+                minHeight: 56,
+              }}
+            >
+              <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                {isHot && <span style={{ fontSize: 20 }}>🔥</span>}
+                <div>
+                  <span style={{ fontSize: 16, fontWeight: 600, color: theme.text }}>{coin.symbol}</span>
+                  <p style={{ fontSize: 11, color: theme.textMuted, margin: 0 }}>
+                    {coin.vol_mcap_ratio.toFixed(0)}% vol/mcap
+                  </p>
+                </div>
+              </div>
+              <div style={{ textAlign: "right" }}>
+                <p style={{ fontSize: 14, fontWeight: 600, color: theme.text, margin: 0 }}>
+                  ${coin.price.toFixed(2)}
+                </p>
+                <p style={{ fontSize: 12, color: coin.change_24h >= 0 ? theme.green : theme.red, margin: 0 }}>
+                  {coin.change_24h >= 0 ? "+" : ""}{coin.change_24h.toFixed(1)}%
+                </p>
+              </div>
+            </div>
+          );
+        })}
+
+      <div style={{ background: theme.bgCard, borderRadius: 12, padding: 16, marginTop: 16, border: `1px solid ${theme.border}` }}>
+        <p style={{ fontSize: 12, color: theme.textSecondary, margin: 0 }}>
+          💡 <strong>Tip:</strong> High volume/mcap ratio combined with price increase often signals renewed interest in older coins during altseason rotations.
+        </p>
+      </div>
+    </div>
+  );
+
+  // About Tab Content
+  const AboutTab = () => (
+    <div style={{ padding: 16, paddingBottom: 100 }}>
+      <div style={{ textAlign: "center", marginBottom: 24 }}>
+        <span style={{ fontSize: 56 }}>📊</span>
+        <h2 style={{ fontSize: 22, fontWeight: 700, color: theme.text, marginBottom: 4 }}>Base Signal</h2>
+        <p style={{ fontSize: 14, color: theme.textSecondary }}>Your Altseason Radar</p>
+      </div>
+
+      <div style={{ background: theme.bgCard, borderRadius: 16, padding: 16, marginBottom: 16, border: `1px solid ${theme.border}` }}>
+        <h3 style={{ fontSize: 14, fontWeight: 600, color: theme.text, marginBottom: 8 }}>What is this?</h3>
+        <p style={{ fontSize: 13, color: theme.textSecondary, lineHeight: 1.6, margin: 0 }}>
+          Base Signal tracks market structure indicators to calculate the probability of favorable altseason conditions. 
+          Our algorithm monitors BTC dominance, altcoin flows, and key support levels in real-time.
+        </p>
+      </div>
+
+      <div style={{ background: theme.bgCard, borderRadius: 16, padding: 16, marginBottom: 16, border: `1px solid ${theme.border}` }}>
+        <h3 style={{ fontSize: 14, fontWeight: 600, color: theme.text, marginBottom: 8 }}>How the Score Works</h3>
+        <div style={{ fontSize: 13, color: theme.textSecondary, lineHeight: 1.8 }}>
+          <p style={{ margin: "0 0 8px 0" }}><strong>+25 pts</strong> — BTC dominance below 61%</p>
+          <p style={{ margin: "0 0 8px 0" }}><strong>+25 pts</strong> — Others dominance above 30%</p>
+          <p style={{ margin: "0 0 8px 0" }}><strong>+15 pts</strong> — Stablecoin dominance rejected</p>
+          <p style={{ margin: "0 0 8px 0" }}><strong>+20 pts</strong> — BTC holding key support</p>
+          <p style={{ margin: 0 }}><strong>+15 pts</strong> — Within target time window</p>
+        </div>
+      </div>
+
+      <div style={{ background: theme.bgCard, borderRadius: 16, padding: 16, marginBottom: 16, border: `1px solid ${theme.border}` }}>
+        <h3 style={{ fontSize: 14, fontWeight: 600, color: theme.text, marginBottom: 8 }}>Old Coin Revival</h3>
+        <p style={{ fontSize: 13, color: theme.textSecondary, lineHeight: 1.6, margin: 0 }}>
+          During altseasons, capital often rotates into older, &quot;forgotten&quot; coins. We track volume spikes 
+          and price movements in historical projects to spot potential revival signals.
+        </p>
+      </div>
+
+      <div style={{ background: theme.bgCard, borderRadius: 16, padding: 16, border: `1px solid ${theme.border}` }}>
+        <h3 style={{ fontSize: 14, fontWeight: 600, color: theme.text, marginBottom: 8 }}>Built By</h3>
+        <p style={{ fontSize: 13, color: theme.textSecondary, margin: 0 }}>
+          QuantumShieldLabs LLC
+        </p>
+        <p style={{ fontSize: 11, color: theme.textMuted, marginTop: 8 }}>
+          ⚠️ Not financial advice. Always do your own research.
+        </p>
+      </div>
+
+      {/* Theme Toggle */}
+      <button
+        onClick={() => setIsDarkMode(!isDarkMode)}
+        style={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          gap: 8,
+          width: "100%",
+          padding: 16,
+          marginTop: 24,
+          background: theme.bgCard,
+          border: `1px solid ${theme.border}`,
+          borderRadius: 12,
+          color: theme.textSecondary,
+          fontSize: 14,
+          cursor: "pointer",
+          minHeight: 52,
+        }}
+      >
+        {isDarkMode ? "☀️ Switch to Light Mode" : "🌙 Switch to Dark Mode"}
+      </button>
+    </div>
+  );
 
   // Loading state
   if (loading) {
     return (
-      <div
-        style={{
-          minHeight: "100vh",
-          background: "#0a0a0f",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          flexDirection: "column",
-          color: "white",
-        }}
-      >
-        <div
-          style={{
-            width: 48,
-            height: 48,
-            border: "4px solid #3b82f6",
-            borderTopColor: "transparent",
-            borderRadius: "50%",
-            animation: "spin 1s linear infinite",
-            marginBottom: 16,
-          }}
-        />
-        <p style={{ color: "#9ca3af", fontFamily: "monospace", fontSize: 14 }}>
-          Loading market data...
-        </p>
+      <div style={{ minHeight: "100vh", background: theme.bg, display: "flex", alignItems: "center", justifyContent: "center", flexDirection: "column" }}>
+        <div style={{ width: 48, height: 48, border: `4px solid ${theme.accent}`, borderTopColor: "transparent", borderRadius: "50%", animation: "spin 1s linear infinite", marginBottom: 16 }} />
+        <p style={{ color: theme.textSecondary, fontSize: 14 }}>Loading market data...</p>
         <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
       </div>
     );
@@ -304,572 +738,27 @@ export default function Home() {
   // Error state
   if (error) {
     return (
-      <div
-        style={{
-          minHeight: "100vh",
-          background: "#0a0a0f",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          flexDirection: "column",
-          padding: 16,
-          color: "white",
-        }}
-      >
-        <p style={{ color: "#f87171", marginBottom: 16, textAlign: "center" }}>
-          {error}
-        </p>
-        <button
-          onClick={fetchData}
-          style={{
-            padding: "12px 24px",
-            background: "#3b82f6",
-            border: "none",
-            borderRadius: 8,
-            color: "white",
-            fontWeight: 600,
-            cursor: "pointer",
-          }}
-        >
+      <div style={{ minHeight: "100vh", background: theme.bg, display: "flex", alignItems: "center", justifyContent: "center", flexDirection: "column", padding: 16 }}>
+        <p style={{ color: theme.red, marginBottom: 16, textAlign: "center" }}>{error}</p>
+        <button onClick={fetchData} style={{ padding: "16px 32px", background: theme.accent, border: "none", borderRadius: 12, color: "#fff", fontWeight: 600, cursor: "pointer", minHeight: 52 }}>
           Retry
         </button>
       </div>
     );
   }
 
-  const btcPrice = data?.prices.bitcoin?.price || 0;
-  const btcChange = data?.prices.bitcoin?.change_24h || 0;
-  const score = data?.altseasonScore || 0;
-
   return (
-    <div
-      style={{
-        minHeight: "100vh",
-        background: "#0a0a0f",
-        color: "white",
-        fontFamily: "system-ui, -apple-system, sans-serif",
-      }}
-    >
-      {/* Header */}
-      <header
-        style={{
-          position: "sticky",
-          top: 0,
-          zIndex: 50,
-          background: "rgba(10, 10, 15, 0.95)",
-          backdropFilter: "blur(8px)",
-          borderBottom: "1px solid rgba(255,255,255,0.1)",
-          padding: "12px 16px",
-        }}
-      >
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-          }}
-        >
-          <div>
-            <h1 style={{ fontSize: 18, fontWeight: 700, margin: 0 }}>
-              <span style={{ color: "#3b82f6" }}>BASE</span> SIGNAL
-            </h1>
-            <p
-              style={{
-                fontSize: 10,
-                color: "#6b7280",
-                fontFamily: "monospace",
-                margin: 0,
-              }}
-            >
-              {context?.user?.displayName
-                ? `Hey ${context.user.displayName} • `
-                : ""}
-              Updated {data?.lastUpdate.toLocaleTimeString()}
-            </p>
-          </div>
-          <div style={{ textAlign: "right" }}>
-            <p style={{ fontSize: 10, color: "#6b7280", margin: 0 }}>Target</p>
-            <p
-              style={{
-                fontSize: 14,
-                fontFamily: "monospace",
-                color: "#facc15",
-                margin: 0,
-                fontWeight: 600,
-              }}
-            >
-              {daysRemaining}d
-            </p>
-          </div>
-        </div>
-      </header>
-
-      <main style={{ padding: 16, paddingBottom: 80 }}>
-        {/* Altseason Score Card */}
-        <div
-          style={{
-            borderRadius: 16,
-            padding: 20,
-            background: getScoreBg(score),
-            border: "1px solid rgba(255,255,255,0.1)",
-            marginBottom: 16,
-          }}
-        >
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "space-between",
-              marginBottom: 12,
-            }}
-          >
-            <span
-              style={{
-                fontSize: 11,
-                color: "#9ca3af",
-                textTransform: "uppercase",
-                letterSpacing: 1,
-              }}
-            >
-              Altseason Probability
-            </span>
-            <span
-              style={{ fontSize: 10, color: "#6b7280", fontFamily: "monospace" }}
-            >
-              LIVE
-            </span>
-          </div>
-
-          <div
-            style={{
-              display: "flex",
-              alignItems: "baseline",
-              gap: 8,
-              marginBottom: 16,
-            }}
-          >
-            <span
-              style={{
-                fontSize: 48,
-                fontWeight: 900,
-                color: getScoreColor(score),
-                fontVariantNumeric: "tabular-nums",
-              }}
-            >
-              {score}
-            </span>
-            <span style={{ fontSize: 24, color: "#6b7280" }}>%</span>
-          </div>
-
-          {/* Progress bar */}
-          <div
-            style={{
-              height: 8,
-              background: "rgba(255,255,255,0.1)",
-              borderRadius: 4,
-              overflow: "hidden",
-              marginBottom: 16,
-            }}
-          >
-            <div
-              style={{
-                height: "100%",
-                width: `${score}%`,
-                background: getScoreColor(score),
-                borderRadius: 4,
-                transition: "width 0.5s ease",
-              }}
-            />
-          </div>
-
-          {/* Signals */}
-          <div>
-            {data?.signals.map((signal, i) => (
-              <p
-                key={i}
-                style={{
-                  fontSize: 12,
-                  color: "#d1d5db",
-                  fontFamily: "monospace",
-                  margin: "4px 0",
-                }}
-              >
-                {signal}
-              </p>
-            ))}
-          </div>
-        </div>
-
-        {/* BTC Price Card */}
-        <div
-          style={{
-            borderRadius: 16,
-            padding: 16,
-            background:
-              "linear-gradient(135deg, rgba(249,115,22,0.1) 0%, rgba(249,115,22,0.05) 100%)",
-            border: "1px solid rgba(249,115,22,0.2)",
-            marginBottom: 16,
-          }}
-        >
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "space-between",
-              marginBottom: 8,
-            }}
-          >
-            <span style={{ fontSize: 12, color: "#9ca3af" }}>Bitcoin</span>
-            <span
-              style={{
-                fontSize: 12,
-                fontFamily: "monospace",
-                color: btcChange >= 0 ? "#4ade80" : "#f87171",
-              }}
-            >
-              {btcChange >= 0 ? "+" : ""}
-              {btcChange.toFixed(2)}%
-            </span>
-          </div>
-          <p
-            style={{
-              fontSize: 24,
-              fontWeight: 700,
-              margin: 0,
-              fontVariantNumeric: "tabular-nums",
-            }}
-          >
-            ${btcPrice.toLocaleString(undefined, { maximumFractionDigits: 0 })}
-          </p>
-        </div>
-
-        {/* Critical Levels */}
-        <div
-          style={{
-            borderRadius: 16,
-            padding: 16,
-            background: "rgba(255,255,255,0.03)",
-            border: "1px solid rgba(255,255,255,0.1)",
-            marginBottom: 16,
-          }}
-        >
-          <h2
-            style={{
-              fontSize: 11,
-              color: "#9ca3af",
-              textTransform: "uppercase",
-              letterSpacing: 1,
-              marginBottom: 12,
-              marginTop: 0,
-            }}
-          >
-            BTC Critical Levels
-          </h2>
-
-          {[
-            {
-              label: "Bull Confirmation",
-              price: BTC_LEVELS.bull_confirmation,
-              check: btcPrice >= BTC_LEVELS.bull_confirmation,
-            },
-            {
-              label: "Critical High",
-              price: BTC_LEVELS.critical_high,
-              check: btcPrice >= BTC_LEVELS.critical_high,
-            },
-            {
-              label: "Critical Low",
-              price: BTC_LEVELS.critical_low,
-              check: btcPrice >= BTC_LEVELS.critical_low,
-            },
-            {
-              label: "Breakdown",
-              price: BTC_LEVELS.breakdown,
-              check: btcPrice >= BTC_LEVELS.breakdown,
-            },
-          ].map((level) => (
-            <div
-              key={level.label}
-              style={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "space-between",
-                padding: "10px 0",
-                borderBottom: "1px solid rgba(255,255,255,0.05)",
-              }}
-            >
-              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                <span style={{ fontSize: 16 }}>
-                  {level.check ? "✅" : "❌"}
-                </span>
-                <span style={{ fontSize: 14, color: "#d1d5db" }}>
-                  {level.label}
-                </span>
-              </div>
-              <span
-                style={{
-                  fontSize: 14,
-                  fontFamily: "monospace",
-                  color: "#9ca3af",
-                }}
-              >
-                ${level.price.toLocaleString()}
-              </span>
-            </div>
-          ))}
-        </div>
-
-        {/* Dominance Grid */}
-        <div
-          style={{
-            borderRadius: 16,
-            padding: 16,
-            background: "rgba(255,255,255,0.03)",
-            border: "1px solid rgba(255,255,255,0.1)",
-            marginBottom: 16,
-          }}
-        >
-          <h2
-            style={{
-              fontSize: 11,
-              color: "#9ca3af",
-              textTransform: "uppercase",
-              letterSpacing: 1,
-              marginBottom: 12,
-              marginTop: 0,
-            }}
-          >
-            Dominance Metrics
-          </h2>
-
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "1fr 1fr",
-              gap: 12,
-            }}
-          >
-            <div
-              style={{
-                background: "rgba(255,255,255,0.03)",
-                borderRadius: 12,
-                padding: 12,
-              }}
-            >
-              <p style={{ fontSize: 10, color: "#6b7280", margin: "0 0 4px 0" }}>
-                BTC Dom
-              </p>
-              <p
-                style={{
-                  fontSize: 20,
-                  fontWeight: 700,
-                  margin: 0,
-                  fontVariantNumeric: "tabular-nums",
-                }}
-              >
-                {data?.dominance.btc_dominance.toFixed(1)}%
-              </p>
-              <p
-                style={{
-                  fontSize: 10,
-                  margin: "4px 0 0 0",
-                  color:
-                    (data?.dominance.btc_dominance || 100) < 61
-                      ? "#4ade80"
-                      : "#f87171",
-                }}
-              >
-                {(data?.dominance.btc_dominance || 100) < 61
-                  ? "🟢 Falling"
-                  : "🔴 High"}
-              </p>
-            </div>
-
-            <div
-              style={{
-                background: "rgba(255,255,255,0.03)",
-                borderRadius: 12,
-                padding: 12,
-              }}
-            >
-              <p style={{ fontSize: 10, color: "#6b7280", margin: "0 0 4px 0" }}>
-                Others Dom
-              </p>
-              <p
-                style={{
-                  fontSize: 20,
-                  fontWeight: 700,
-                  margin: 0,
-                  fontVariantNumeric: "tabular-nums",
-                }}
-              >
-                {data?.dominance.others_dominance.toFixed(1)}%
-              </p>
-              <p
-                style={{
-                  fontSize: 10,
-                  margin: "4px 0 0 0",
-                  color:
-                    (data?.dominance.others_dominance || 0) > 30
-                      ? "#4ade80"
-                      : "#facc15",
-                }}
-              >
-                {(data?.dominance.others_dominance || 0) > 30
-                  ? "🟢 Rising"
-                  : "⏳ Building"}
-              </p>
-            </div>
-
-            <div
-              style={{
-                background: "rgba(255,255,255,0.03)",
-                borderRadius: 12,
-                padding: 12,
-              }}
-            >
-              <p style={{ fontSize: 10, color: "#6b7280", margin: "0 0 4px 0" }}>
-                ETH Dom
-              </p>
-              <p
-                style={{
-                  fontSize: 20,
-                  fontWeight: 700,
-                  margin: 0,
-                  fontVariantNumeric: "tabular-nums",
-                }}
-              >
-                {data?.dominance.eth_dominance.toFixed(1)}%
-              </p>
-            </div>
-
-            <div
-              style={{
-                background: "rgba(255,255,255,0.03)",
-                borderRadius: 12,
-                padding: 12,
-              }}
-            >
-              <p style={{ fontSize: 10, color: "#6b7280", margin: "0 0 4px 0" }}>
-                Total MCap
-              </p>
-              <p
-                style={{
-                  fontSize: 20,
-                  fontWeight: 700,
-                  margin: 0,
-                  fontVariantNumeric: "tabular-nums",
-                }}
-              >
-                ${((data?.dominance.total_market_cap || 0) / 1e12).toFixed(2)}T
-              </p>
-            </div>
-          </div>
-        </div>
-
-        {/* Old Coin Revival Watch */}
-        <div
-          style={{
-            borderRadius: 16,
-            padding: 16,
-            background: "rgba(255,255,255,0.03)",
-            border: "1px solid rgba(255,255,255,0.1)",
-            marginBottom: 16,
-          }}
-        >
-          <h2
-            style={{
-              fontSize: 11,
-              color: "#9ca3af",
-              textTransform: "uppercase",
-              letterSpacing: 1,
-              marginBottom: 12,
-              marginTop: 0,
-            }}
-          >
-            Old Coin Revival Watch 👀
-          </h2>
-
-          {Object.entries(data?.oldCoins || {})
-            .sort((a, b) => b[1].change_24h - a[1].change_24h)
-            .slice(0, 5)
-            .map(([id, coin]) => {
-              const isHot = coin.change_24h > 15 && coin.vol_mcap_ratio > 15;
-              return (
-                <div
-                  key={id}
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "space-between",
-                    padding: "10px 12px",
-                    marginBottom: 8,
-                    borderRadius: 8,
-                    background: isHot
-                      ? "rgba(249,115,22,0.1)"
-                      : "rgba(255,255,255,0.03)",
-                    border: isHot
-                      ? "1px solid rgba(249,115,22,0.3)"
-                      : "1px solid transparent",
-                  }}
-                >
-                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                    {isHot && <span>🔥</span>}
-                    <span style={{ fontSize: 14, fontWeight: 500 }}>
-                      {coin.symbol}
-                    </span>
-                  </div>
-                  <div
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: 16,
-                    }}
-                  >
-                    <span
-                      style={{
-                        fontSize: 12,
-                        color: "#9ca3af",
-                        fontFamily: "monospace",
-                      }}
-                    >
-                      ${coin.price.toFixed(2)}
-                    </span>
-                    <span
-                      style={{
-                        fontSize: 12,
-                        fontFamily: "monospace",
-                        color: coin.change_24h >= 0 ? "#4ade80" : "#f87171",
-                        minWidth: 60,
-                        textAlign: "right",
-                      }}
-                    >
-                      {coin.change_24h >= 0 ? "+" : ""}
-                      {coin.change_24h.toFixed(1)}%
-                    </span>
-                    <span
-                      style={{
-                        fontSize: 10,
-                        color: "#6b7280",
-                        minWidth: 45,
-                        textAlign: "right",
-                      }}
-                    >
-                      {coin.vol_mcap_ratio.toFixed(0)}% V/M
-                    </span>
-                  </div>
-                </div>
-              );
-            })}
-        </div>
-
-        {/* Footer */}
-        <div style={{ textAlign: "center", paddingTop: 16 }}>
-          <p style={{ fontSize: 10, color: "#4b5563" }}>
-            Built by QuantumShieldLabs • Not financial advice
-          </p>
-        </div>
+    <div style={{ minHeight: "100vh", background: theme.bg, color: theme.text }}>
+      {showOnboarding && <OnboardingModal />}
+      <UserHeader />
+      
+      <main>
+        {activeTab === "signals" && <SignalsTab />}
+        {activeTab === "watchlist" && <WatchlistTab />}
+        {activeTab === "about" && <AboutTab />}
       </main>
+
+      <BottomNav />
     </div>
   );
 }

@@ -634,7 +634,7 @@ const OnboardingModal = () => (
 
   // About Tab Content
   const AboutTab = () => (
-    <div style={{ padding: 16, paddingBottom: 100 }}>
+    <div style={{ padding: 16, paddingBottom: 140 }}>
       <div style={{ textAlign: "center", marginBottom: 24 }}>
         <span style={{ fontSize: 56 }}>📊</span>
         <h2 style={{ fontSize: 22, fontWeight: 700, color: theme.text, marginBottom: 4 }}>Base Signal</h2>

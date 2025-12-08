@@ -285,96 +285,75 @@ export default function Home() {
     return theme.red;
   };
 
-  // Onboarding Modal
-  const OnboardingModal = () => (
+  // Onboarding Modal - FIXED FOR MOBILE
+const OnboardingModal = () => (
+  <div
+    style={{
+      position: "fixed",
+      inset: 0,
+      background: "rgba(0,0,0,0.8)",
+      display: "flex",
+      alignItems: "flex-end",
+      justifyContent: "center",
+      zIndex: 100,
+      padding: 0,
+    }}
+  >
     <div
       style={{
-        position: "fixed",
-        inset: 0,
-        background: "rgba(0,0,0,0.8)",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        zIndex: 100,
-        padding: 16,
+        background: theme.bg,
+        borderRadius: "20px 20px 0 0",
+        padding: 24,
+        width: "100%",
+        maxHeight: "70vh",
+        overflowY: "auto",
+        border: `1px solid ${theme.border}`,
       }}
     >
-      <div
+      <h2
         style={{
-          background: theme.bg,
-          borderRadius: 20,
-          padding: 24,
-          maxWidth: 340,
-          width: "100%",
-          border: `1px solid ${theme.border}`,
+          color: theme.text,
+          fontSize: 20,
+          fontWeight: 700,
+          textAlign: "center",
+          marginBottom: 12,
+          marginTop: 0,
         }}
       >
-        <div style={{ textAlign: "center", marginBottom: 20 }}>
-          <span style={{ fontSize: 48 }}>📊</span>
-        </div>
-        <h2
-          style={{
-            color: theme.text,
-            fontSize: 22,
-            fontWeight: 700,
-            textAlign: "center",
-            marginBottom: 12,
-          }}
-        >
-          Welcome to Base Signal
-        </h2>
-        <p
-          style={{
-            color: theme.textSecondary,
-            fontSize: 14,
-            lineHeight: 1.6,
-            textAlign: "center",
-            marginBottom: 20,
-          }}
-        >
-          Your real-time altseason radar. We track BTC dominance, market structure, 
-          and historical patterns to calculate the probability of altseason conditions.
-        </p>
-        
-        <div
-          style={{
-            background: theme.bgCard,
-            borderRadius: 12,
-            padding: 16,
-            marginBottom: 20,
-          }}
-        >
-          <p style={{ color: theme.textSecondary, fontSize: 12, marginBottom: 8 }}>
-            <strong style={{ color: theme.text }}>How the score works:</strong>
-          </p>
-          <ul style={{ color: theme.textSecondary, fontSize: 12, paddingLeft: 16, margin: 0 }}>
-            <li style={{ marginBottom: 4 }}>BTC dominance falling below 61%</li>
-            <li style={{ marginBottom: 4 }}>Altcoin (&quot;Others&quot;) dominance rising</li>
-            <li style={{ marginBottom: 4 }}>Stablecoin capital rotating out</li>
-            <li style={{ marginBottom: 4 }}>BTC holding key support levels</li>
-          </ul>
-        </div>
+        📊 Welcome to Base Signal
+      </h2>
+      <p
+        style={{
+          color: theme.textSecondary,
+          fontSize: 14,
+          lineHeight: 1.5,
+          textAlign: "center",
+          marginBottom: 16,
+        }}
+      >
+        Your real-time altseason radar tracking BTC dominance and market structure.
+      </p>
 
-        <button
-          onClick={dismissOnboarding}
-          style={{
-            width: "100%",
-            padding: 16,
-            background: theme.accent,
-            border: "none",
-            borderRadius: 12,
-            color: "#fff",
-            fontSize: 16,
-            fontWeight: 600,
-            cursor: "pointer",
-            minHeight: 52,
-          }}
-        >
-          Got it, let&apos;s go!
-        </button>
-      </div>
+      <button
+        onClick={dismissOnboarding}
+        style={{
+          width: "100%",
+          padding: 16,
+          background: theme.accent,
+          border: "none",
+          borderRadius: 12,
+          color: "#fff",
+          fontSize: 16,
+          fontWeight: 600,
+          cursor: "pointer",
+          minHeight: 52,
+        }}
+      >
+        Let&apos;s go! 🚀
+      </button>
     </div>
-  );
+  </div>
+);
 
   // User Header Component
   const UserHeader = () => (

@@ -202,7 +202,7 @@ export default function Home() {
         `https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&ids=${OLD_COINS.join(",")}&order=market_cap_desc&sparkline=false&price_change_percentage=24h`
       );
       
-      let oldCoins: Record<string, OldCoinData> = {};
+      const oldCoins: Record<string, OldCoinData> = {};
       
       if (oldCoinsRes.ok) {
         const oldCoinsJson = await oldCoinsRes.json();

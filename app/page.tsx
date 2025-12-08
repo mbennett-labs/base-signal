@@ -479,7 +479,7 @@ const OnboardingModal = () => (
     const btcChange = data?.prices.bitcoin?.change_24h || 0;
 
     return (
-      <div style={{ padding: 16, paddingBottom: 100 }}>
+      <div style={{ padding: 16, paddingBottom: 140 }}>
         {/* Altseason Score */}
         <div
           style={{
@@ -576,7 +576,7 @@ const OnboardingModal = () => (
 
   // Watchlist Tab Content
   const WatchlistTab = () => (
-    <div style={{ padding: 16, paddingBottom: 100 }}>
+    <div style={{ padding: 16, paddingBottom: 140 }}>
       <div style={{ marginBottom: 16 }}>
         <h2 style={{ fontSize: 18, fontWeight: 700, color: theme.text, marginBottom: 4 }}>Old Coin Revival Watch</h2>
         <p style={{ fontSize: 12, color: theme.textSecondary, margin: 0 }}>

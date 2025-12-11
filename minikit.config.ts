@@ -1,11 +1,11 @@
 const ROOT_URL =
   process.env.NEXT_PUBLIC_URL ||
-  (process.env.VERCEL_PROJECT_PRODUCTION_URL ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}` : 'http://localhost:3000');
+  (process.env.VERCEL_PROJECT_PRODUCTION_URL 
+    ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}` 
+    : 'http://localhost:3000');
 
 /**
- * MiniApp configuration object. Must follow the Farcaster MiniApp specification.
- *
- * @see {@link https://miniapps.farcaster.xyz/docs/guides/publishing}
+ * MiniApp configuration for BTC Battle
  */
 export const minikitConfig = {
   accountAssociation: {
@@ -18,25 +18,21 @@ export const minikitConfig = {
   },
   miniapp: {
     version: "1",
-    name: "Base Signal",
-    subtitle: "Market Intelligence Dashboard",
-    description: "Track altseason signals, BTC dominance, and key market indicators in real-time.",
-    screenshotUrls: [
-  `${ROOT_URL}/screenshot1.jpg`,
-  `${ROOT_URL}/screenshot2.jpg`,
-  `${ROOT_URL}/screenshot3.jpg`
-],
+    name: "BTC Battle",
+    subtitle: "Real-Time Whale War",
+    description: "Watch bulls and bears fight in real-time! Track whale movements, market sentiment, and see who's winning the battle for Bitcoin. Live tug-of-war visualization powered by on-chain data.",
+    screenshotUrls: [`${ROOT_URL}/screenshots/battle-1.png`],
     iconUrl: `${ROOT_URL}/icon.png`,
     splashImageUrl: `${ROOT_URL}/splash.png`,
-    splashBackgroundColor: "#0052FF",
+    splashBackgroundColor: "#0a0a0f",
     homeUrl: ROOT_URL,
     webhookUrl: `${ROOT_URL}/api/webhook`,
     primaryCategory: "finance",
-    tags: ["trading", "defi", "analytics", "market-data"],
+    tags: ["trading", "bitcoin", "whales", "analytics", "defi", "real-time"],
     heroImageUrl: `${ROOT_URL}/hero.png`,
-    tagline: "Your altseason radar",
-    ogTitle: "Base Signal",
-    ogDescription: "Track market signals on Base",
+    tagline: "Who's winning? Bulls or Bears?",
+    ogTitle: "BTC Battle - Real-Time Whale War",
+    ogDescription: "Watch bulls and bears fight for Bitcoin dominance",
     ogImageUrl: `${ROOT_URL}/og.png`,
     noindex: false
   },

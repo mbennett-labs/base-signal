@@ -1,159 +1,67 @@
-# Waitlist Mini App Quickstart
+# BTC Battle ⚔️
 
-This is a demo Mini App application built using OnchainKit and the Farcaster SDK. Build a waitlist sign-up mini app for your company that can be published to the Base app and Farcaster. 
+Real-time Bitcoin whale war visualization. Watch bulls and bears fight for market dominance!
 
-> [!IMPORTANT]  
-> Before interacting with this demo, please review our [disclaimer](#disclaimer) — there are **no official tokens or apps** associated with Cubey, Base, or Coinbase.
+![BTC Battle](https://base-signal.vercel.app/hero.png)
 
-## Prerequisites
+## Features
 
-Before getting started, make sure you have:
+- 🐂 **Tug of War Visualization** - See bulls vs bears battle in real-time
+- 🐋 **Whale Movements** - Track large BTC transactions
+- 📊 **Live Market Data** - BTC price, dominance, Fear & Greed
+- 🌤️ **Sentiment Weather** - Market mood at a glance
+- 📱 **Mobile Optimized** - Works great on any device
+- 🔵 **Base Mini App** - Integrated with Farcaster
 
-* Base app account
-* A [Farcaster](https://farcaster.xyz/) account
-* [Vercel](https://vercel.com/) account for hosting the application
-* [Coinbase Developer Platform](https://portal.cdp.coinbase.com/) Client API Key
+## Tech Stack
 
-## Getting Started
+- Next.js 15
+- React 19
+- TypeScript
+- CoinGecko API
+- Alternative.me Fear & Greed API
+- MiniKit (Base/Farcaster integration)
 
-### 1. Clone this repository 
+## Data Sources
+
+| Metric | Source |
+|--------|--------|
+| BTC Price | CoinGecko |
+| BTC/USDT Dominance | CoinGecko Global |
+| Fear & Greed Index | Alternative.me |
+| Whale Alerts | Simulated (upgrade to WhaleAlert API) |
+
+## Local Development
 
 ```bash
-git clone https://github.com/base/demos.git
-```
-
-### 2. Install dependencies:
-
-```bash
-cd demos/minikit/waitlist-mini-app-qs
 npm install
-```
-
-### 3. Configure environment variables
-
-Create a `.env.local` file and add your environment variables:
-
-```bash
-NEXT_PUBLIC_PROJECT_NAME="Your App Name"
-NEXT_PUBLIC_ONCHAINKIT_API_KEY=<Replace-WITH-YOUR-CDP-API-KEY>
-NEXT_PUBLIC_URL=
-```
-
-### 4. Run locally:
-
-```bash
 npm run dev
 ```
 
-## Customization
+Open [http://localhost:3000](http://localhost:3000)
 
-### Update Manifest Configuration
+## Deploy to Vercel
 
-The `minikit.config.ts` file configures your manifest located at `app/.well-known/farcaster.json`.
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/mbennett-labs/base-signal)
 
-**Skip the `accountAssociation` object for now.**
+## Live Demo
 
-To personalize your app, change the `name`, `subtitle`, and `description` fields and add images to your `/public` folder. Then update their URLs in the file.
+[base-signal.vercel.app](https://base-signal.vercel.app)
 
-## Deployment
+## Stats Explained
 
-### 1. Deploy to Vercel
+| Stat | Meaning |
+|------|---------|
+| BTC.D | Bitcoin's % of total crypto market cap |
+| USDT.D | Stablecoin dominance (cash on sidelines) |
+| RSI | Relative Strength Index (overbought/oversold) |
+| L/S | Long/Short ratio on futures exchanges |
+| F&G | Fear & Greed sentiment (0-100) |
 
-```bash
-vercel --prod
-```
+## Built By
 
-You should have a URL deployed to a domain similar to: `https://your-vercel-project-name.vercel.app/`
+**QuantumShieldLabs** - [GitHub](https://github.com/mbennett-labs)
 
-### 2. Update environment variables
+## License
 
-Add your production URL to your local `.env` file:
-
-```bash
-NEXT_PUBLIC_PROJECT_NAME="Your App Name"
-NEXT_PUBLIC_ONCHAINKIT_API_KEY=<Replace-WITH-YOUR-CDP-API-KEY>
-NEXT_PUBLIC_URL=https://your-vercel-project-name.vercel.app/
-```
-
-### 3. Upload environment variables to Vercel
-
-Add environment variables to your production environment:
-
-```bash
-vercel env add NEXT_PUBLIC_PROJECT_NAME production
-vercel env add NEXT_PUBLIC_ONCHAINKIT_API_KEY production
-vercel env add NEXT_PUBLIC_URL production
-```
-
-## Account Association
-
-### 1. Sign Your Manifest
-
-1. Navigate to [Farcaster Manifest tool](https://farcaster.xyz/~/developers/mini-apps/manifest)
-2. Paste your domain in the form field (ex: your-vercel-project-name.vercel.app)
-3. Click the `Generate account association` button and follow the on-screen instructions for signing with your Farcaster wallet
-4. Copy the `accountAssociation` object
-
-### 2. Update Configuration
-
-Update your `minikit.config.ts` file to include the `accountAssociation` object:
-
-```ts
-export const minikitConfig = {
-    accountAssociation: {
-        "header": "your-header-here",
-        "payload": "your-payload-here",
-        "signature": "your-signature-here"
-    },
-    frame: {
-        // ... rest of your frame configuration
-    },
-}
-```
-
-### 3. Deploy Updates
-
-```bash
-vercel --prod
-```
-
-## Testing and Publishing
-
-### 1. Preview Your App
-
-Go to [base.dev/preview](https://base.dev/preview) to validate your app:
-
-1. Add your app URL to view the embeds and click the launch button to verify the app launches as expected
-2. Use the "Account association" tab to verify the association credentials were created correctly
-3. Use the "Metadata" tab to see the metadata added from the manifest and identify any missing fields
-
-### 2. Publish to Base App
-
-To publish your app, create a post in the Base app with your app's URL.
-
-## Learn More
-
-For detailed step-by-step instructions, see the [Create a Mini App tutorial](https://docs.base.org/docs/mini-apps/quickstart/create-new-miniapp/) in the Base documentation.
-
-
----
-
-## Disclaimer  
-
-This project is a **demo application** created by the **Base / Coinbase Developer Relations team** for **educational and demonstration purposes only**.  
-
-**There is no token, cryptocurrency, or investment product associated with Cubey, Base, or Coinbase.**  
-
-Any social media pages, tokens, or applications claiming to be affiliated with, endorsed by, or officially connected to Cubey, Base, or Coinbase are **unauthorized and fraudulent**.  
-
-We do **not** endorse or support any third-party tokens, apps, or projects using the Cubey name or branding.  
-
-> [!WARNING]
-> Do **not** purchase, trade, or interact with any tokens or applications claiming affiliation with Coinbase, Base, or Cubey.  
-> Coinbase and Base will never issue a token or ask you to connect your wallet for this demo.  
-
-For official Base developer resources, please visit:  
-- [https://base.org](https://base.org)  
-- [https://docs.base.org](https://docs.base.org)  
-
----
+MIT

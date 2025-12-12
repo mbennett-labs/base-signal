@@ -1051,7 +1051,7 @@ export default function BTCBattle() {
                         </div>
                       </div>
                     </div>
-                    <div style={{ fontSize: 14, lineHeight: 1.5, color: theme.textSecondary, marginBottom: 10 }}>
+                    <div style={{ fontSize: 14, lineHeight: 1.6, color: theme.text, marginBottom: 10, opacity: 0.95 }}>
                       {cast.text}
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 16, fontSize: 12, color: theme.textMuted }}>

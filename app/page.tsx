@@ -353,11 +353,6 @@ export default function BTCBattle() {
 
   // Initialize
   useEffect(() => {
-    // Signal to Farcaster that the Mini App is ready
-    import('@farcaster/miniapp-sdk').then(({ sdk }) => {
-      sdk.actions.ready().catch(console.error);
-    }).catch(() => console.log('Not in Farcaster context'));
-
     fetchPrice();
     fetchGlobal();
     fetchFearGreed();

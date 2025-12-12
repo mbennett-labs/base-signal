@@ -75,7 +75,7 @@ interface FarcasterCast {
 }
 
 // Tooltip component
-function Tooltip({ statKey, children }: { statKey: string; children: React.ReactNode }) {
+function Tooltip({ statKey, children, isDark = true }: { statKey: string; children: React.ReactNode; isDark?: boolean }) {
   const [show, setShow] = useState(false);
   const def = statDefinitions[statKey];
   
@@ -88,7 +88,7 @@ function Tooltip({ statKey, children }: { statKey: string; children: React.React
         onTouchStart={() => setShow(!show)}
       >
         {children}
-        <span style={{ color: '#475569', fontSize: 12 }}>ⓘ</span>
+        <span style={{ color: isDark ? '#475569' : '#94a3b8', fontSize: 12 }}>ⓘ</span>
       </div>
       {show && def && (
         <div style={{
@@ -99,15 +99,15 @@ function Tooltip({ statKey, children }: { statKey: string; children: React.React
           marginBottom: 8,
           width: 250,
           padding: 12,
-          background: '#1e293b',
-          border: '1px solid #475569',
+          background: isDark ? '#1e293b' : '#ffffff',
+          border: `1px solid ${isDark ? '#475569' : '#e2e8f0'}`,
           borderRadius: 8,
-          boxShadow: '0 10px 40px rgba(0,0,0,0.5)',
+          boxShadow: isDark ? '0 10px 40px rgba(0,0,0,0.5)' : '0 10px 40px rgba(0,0,0,0.15)',
           zIndex: 50,
           textAlign: 'left'
         }}>
           <div style={{ fontSize: 11, fontWeight: 'bold', color: '#facc15', marginBottom: 4 }}>{def.full}</div>
-          <div style={{ fontSize: 11, color: '#cbd5e1', marginBottom: 8 }}>{def.desc}</div>
+          <div style={{ fontSize: 11, color: isDark ? '#cbd5e1' : '#475569', marginBottom: 8 }}>{def.desc}</div>
           <div style={{ fontSize: 10, color: '#4ade80' }}>🟢 {def.bullish}</div>
           <div style={{ fontSize: 10, color: '#f87171' }}>🔴 {def.bearish}</div>
         </div>
@@ -134,6 +134,21 @@ export default function BTCBattle() {
   const [newsItems, setNewsItems] = useState<NewsItem[]>([]);
   const [farcasterCasts, setFarcasterCasts] = useState<FarcasterCast[]>([]);
   const [activeTab, setActiveTab] = useState<'battle' | 'news' | 'farcaster'>('battle');
+  const [isDarkMode, setIsDarkMode] = useState(true);
+
+  // Theme colors
+  const theme = {
+    bg: isDarkMode ? '#0a0a0f' : '#f8fafc',
+    bgSecondary: isDarkMode ? 'rgba(30,41,59,0.6)' : 'rgba(241,245,249,0.9)',
+    bgCard: isDarkMode ? 'rgba(15,23,42,0.8)' : 'rgba(255,255,255,0.95)',
+    text: isDarkMode ? 'white' : '#0f172a',
+    textSecondary: isDarkMode ? '#94a3b8' : '#64748b',
+    textMuted: isDarkMode ? '#64748b' : '#94a3b8',
+    border: isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)',
+    borderAccent: isDarkMode ? 'rgba(250,204,21,0.5)' : 'rgba(250,204,21,0.7)',
+    tooltipBg: isDarkMode ? '#1e293b' : '#ffffff',
+    tooltipBorder: isDarkMode ? '#475569' : '#e2e8f0',
+  };
 
   const exchanges = ['Coinbase', 'Binance', 'Kraken', 'Unknown Wallet', 'Bitfinex', 'OKX'];
 
@@ -395,11 +410,12 @@ export default function BTCBattle() {
   const styles = {
     container: {
       minHeight: '100vh',
-      background: '#0a0a0f',
-      color: 'white',
+      background: theme.bg,
+      color: theme.text,
       fontFamily: "'Rajdhani', system-ui, sans-serif",
       overflow: 'hidden' as const,
       position: 'relative' as const,
+      transition: 'background 0.3s, color 0.3s',
     },
     bgGlow: {
       position: 'fixed' as const,
@@ -414,8 +430,8 @@ export default function BTCBattle() {
       justifyContent: 'space-between',
       alignItems: 'center',
       padding: '16px 20px',
-      borderBottom: '1px solid rgba(255,255,255,0.1)',
-      background: 'rgba(10,10,15,0.9)',
+      borderBottom: `1px solid ${theme.border}`,
+      background: isDarkMode ? 'rgba(10,10,15,0.9)' : 'rgba(255,255,255,0.95)',
       backdropFilter: 'blur(10px)',
       flexWrap: 'wrap' as const,
       gap: 12,
@@ -433,9 +449,9 @@ export default function BTCBattle() {
       padding: '20px',
     },
     card: {
-      background: 'rgba(30,41,59,0.5)',
+      background: isDarkMode ? 'rgba(30,41,59,0.5)' : 'rgba(241,245,249,0.8)',
       borderRadius: 16,
-      border: '1px solid rgba(255,255,255,0.1)',
+      border: `1px solid ${theme.border}`,
       padding: 20,
       marginBottom: 20,
     },
@@ -446,8 +462,8 @@ export default function BTCBattle() {
       justifyContent: 'center',
       gap: 24,
       padding: '16px 20px',
-      borderTop: '1px solid rgba(255,255,255,0.1)',
-      background: 'rgba(10,10,15,0.95)',
+      borderTop: `1px solid ${theme.border}`,
+      background: isDarkMode ? 'rgba(10,10,15,0.95)' : 'rgba(255,255,255,0.95)',
       backdropFilter: 'blur(10px)',
       flexWrap: 'wrap' as const,
     },
@@ -530,7 +546,24 @@ export default function BTCBattle() {
           >
             📖 {showLegend ? 'Hide' : 'Legend'}
           </button>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 11, color: '#64748b' }}>
+          <button
+            onClick={() => setIsDarkMode(!isDarkMode)}
+            style={{
+              fontSize: 11,
+              padding: '6px 12px',
+              background: isDarkMode ? 'rgba(51,65,85,0.5)' : 'rgba(241,245,249,0.9)',
+              border: `1px solid ${theme.border}`,
+              borderRadius: 8,
+              color: theme.textSecondary,
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: 4,
+            }}
+          >
+            {isDarkMode ? '☀️' : '🌙'} {isDarkMode ? 'Light' : 'Dark'}
+          </button>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 11, color: theme.textMuted }}>
             <span style={{
               width: 8,
               height: 8,
@@ -549,34 +582,35 @@ export default function BTCBattle() {
           margin: '0 20px',
           marginTop: 16,
           padding: 16,
-          background: '#1e293b',
-          border: '1px solid #334155',
+          background: theme.tooltipBg,
+          border: `1px solid ${theme.tooltipBorder}`,
           borderRadius: 12,
           position: 'relative',
           zIndex: 20,
+          color: theme.text,
         }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 12 }}>
             <h3 style={{ fontSize: 13, fontWeight: 'bold', color: '#facc15', margin: 0 }}>📖 QUICK REFERENCE</h3>
-            <button onClick={() => setShowLegend(false)} style={{ background: 'none', border: 'none', color: '#64748b', cursor: 'pointer' }}>✕</button>
+            <button onClick={() => setShowLegend(false)} style={{ background: 'none', border: 'none', color: theme.textMuted, cursor: 'pointer' }}>✕</button>
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 16, fontSize: 11 }}>
             <div>
               <div style={{ fontWeight: 'bold', marginBottom: 4 }}>⚔️ Tug of War</div>
-              <div style={{ color: '#94a3b8' }}>
+              <div style={{ color: theme.textSecondary }}>
                 <span style={{ color: '#4ade80' }}>← Bull Zone:</span> Bulls winning<br/>
                 <span style={{ color: '#f87171' }}>Bear Zone →:</span> Bears winning
               </div>
             </div>
             <div>
               <div style={{ fontWeight: 'bold', marginBottom: 4 }}>🐋 Whale Alerts</div>
-              <div style={{ color: '#94a3b8' }}>
+              <div style={{ color: theme.textSecondary }}>
                 <span style={{ color: '#4ade80' }}>🟢 BUY:</span> Bullish pressure<br/>
                 <span style={{ color: '#f87171' }}>🔴 SELL:</span> Bearish pressure
               </div>
             </div>
             <div>
               <div style={{ fontWeight: 'bold', marginBottom: 4 }}>🌤️ Weather = Sentiment</div>
-              <div style={{ color: '#94a3b8' }}>
+              <div style={{ color: theme.textSecondary }}>
                 ☀️ Extreme Greed (75-100)<br/>
                 ⛈️ Extreme Fear (0-24)
               </div>
@@ -591,8 +625,8 @@ export default function BTCBattle() {
         justifyContent: 'center',
         gap: 8,
         padding: '12px 20px',
-        background: 'rgba(15,23,42,0.8)',
-        borderBottom: '1px solid rgba(255,255,255,0.1)',
+        background: isDarkMode ? 'rgba(15,23,42,0.8)' : 'rgba(241,245,249,0.95)',
+        borderBottom: `1px solid ${theme.border}`,
         position: 'relative',
         zIndex: 10,
       }}>
@@ -608,10 +642,10 @@ export default function BTCBattle() {
               flex: 1,
               maxWidth: 140,
               padding: '10px 16px',
-              background: activeTab === tab.id ? 'rgba(250,204,21,0.15)' : 'rgba(51,65,85,0.3)',
-              border: activeTab === tab.id ? '1px solid rgba(250,204,21,0.5)' : '1px solid rgba(255,255,255,0.1)',
+              background: activeTab === tab.id ? 'rgba(250,204,21,0.15)' : (isDarkMode ? 'rgba(51,65,85,0.3)' : 'rgba(226,232,240,0.5)'),
+              border: activeTab === tab.id ? '1px solid rgba(250,204,21,0.5)' : `1px solid ${theme.border}`,
               borderRadius: 10,
-              color: activeTab === tab.id ? '#facc15' : '#94a3b8',
+              color: activeTab === tab.id ? '#facc15' : theme.textSecondary,
               cursor: 'pointer',
               transition: 'all 0.2s',
               textAlign: 'center',
@@ -816,14 +850,14 @@ export default function BTCBattle() {
               }}>
                 📰 Crypto News Feed
               </h2>
-              <span style={{ fontSize: 10, color: '#64748b' }}>
+              <span style={{ fontSize: 10, color: theme.textMuted }}>
                 Powered by CryptoPanic
               </span>
             </div>
             
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
               {newsItems.length === 0 ? (
-                <div style={{ textAlign: 'center', padding: 40, color: '#64748b' }}>
+                <div style={{ textAlign: 'center', padding: 40, color: theme.textMuted }}>
                   Loading news...
                 </div>
               ) : (
@@ -836,12 +870,12 @@ export default function BTCBattle() {
                     style={{
                       display: 'block',
                       padding: 14,
-                      background: 'rgba(30,41,59,0.6)',
+                      background: theme.bgSecondary,
                       borderRadius: 10,
-                      border: '1px solid rgba(255,255,255,0.1)',
+                      border: `1px solid ${theme.border}`,
                       borderLeft: `3px solid ${
                         item.sentiment === 'bullish' ? '#4ade80' : 
-                        item.sentiment === 'bearish' ? '#f87171' : '#64748b'
+                        item.sentiment === 'bearish' ? '#f87171' : theme.textMuted
                       }`,
                       textDecoration: 'none',
                       color: 'inherit',
@@ -853,7 +887,7 @@ export default function BTCBattle() {
                         <div style={{ fontSize: 14, fontWeight: 500, marginBottom: 6, lineHeight: 1.4 }}>
                           {item.title}
                         </div>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 11, color: '#64748b' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 11, color: theme.textMuted }}>
                           <span>{item.source}</span>
                           <span>•</span>
                           <span>{formatTimeAgo(item.timestamp)}</span>
@@ -899,7 +933,7 @@ export default function BTCBattle() {
               }}>
                 🟣 Farcaster Feed
               </h2>
-              <span style={{ fontSize: 10, color: '#64748b' }}>
+              <span style={{ fontSize: 10, color: theme.textMuted }}>
                 Crypto & Base Community
               </span>
             </div>
@@ -918,13 +952,13 @@ export default function BTCBattle() {
               <span style={{ fontSize: 24 }}>🔵</span>
               <div>
                 <div style={{ fontSize: 12, fontWeight: 'bold', color: '#a78bfa' }}>Built on Base</div>
-                <div style={{ fontSize: 10, color: '#94a3b8' }}>Integrated with Farcaster social protocol</div>
+                <div style={{ fontSize: 10, color: theme.textSecondary }}>Integrated with Farcaster social protocol</div>
               </div>
             </div>
             
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
               {farcasterCasts.length === 0 ? (
-                <div style={{ textAlign: 'center', padding: 40, color: '#64748b' }}>
+                <div style={{ textAlign: 'center', padding: 40, color: theme.textMuted }}>
                   Loading casts...
                 </div>
               ) : (
@@ -933,9 +967,9 @@ export default function BTCBattle() {
                     key={cast.id}
                     style={{
                       padding: 14,
-                      background: 'rgba(30,41,59,0.6)',
+                      background: theme.bgSecondary,
                       borderRadius: 12,
-                      border: '1px solid rgba(255,255,255,0.1)',
+                      border: `1px solid ${theme.border}`,
                     }}
                   >
                     <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
@@ -952,18 +986,18 @@ export default function BTCBattle() {
                         {cast.authorPfp}
                       </div>
                       <div style={{ flex: 1 }}>
-                        <div style={{ fontSize: 13, fontWeight: 'bold', color: '#e2e8f0' }}>
+                        <div style={{ fontSize: 13, fontWeight: 'bold', color: theme.text }}>
                           @{cast.author}
                         </div>
-                        <div style={{ fontSize: 10, color: '#64748b' }}>
+                        <div style={{ fontSize: 10, color: theme.textMuted }}>
                           {formatTimeAgo(cast.timestamp)} • /{cast.channel}
                         </div>
                       </div>
                     </div>
-                    <div style={{ fontSize: 14, lineHeight: 1.5, color: '#cbd5e1', marginBottom: 10 }}>
+                    <div style={{ fontSize: 14, lineHeight: 1.5, color: theme.textSecondary, marginBottom: 10 }}>
                       {cast.text}
                     </div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 16, fontSize: 12, color: '#64748b' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 16, fontSize: 12, color: theme.textMuted }}>
                       <span>❤️ {cast.likes}</span>
                       <span style={{ 
                         padding: '2px 8px', 
@@ -990,7 +1024,7 @@ export default function BTCBattle() {
               textAlign: 'center',
             }}>
               <div style={{ fontSize: 13, fontWeight: 'bold', marginBottom: 4 }}>Join the conversation</div>
-              <div style={{ fontSize: 11, color: '#94a3b8' }}>
+              <div style={{ fontSize: 11, color: theme.textSecondary }}>
                 Follow @btcbattle on Warpcast for real-time updates
               </div>
             </div>
@@ -1000,43 +1034,43 @@ export default function BTCBattle() {
 
       {/* Stats Footer */}
       <footer style={styles.footer}>
-        <Tooltip statKey="BTC.D">
+        <Tooltip statKey="BTC.D" isDark={isDarkMode}>
           <div style={{ textAlign: 'center' }}>
-            <div style={{ fontSize: 9, color: '#64748b', textTransform: 'uppercase', letterSpacing: 1 }}>BTC.D</div>
+            <div style={{ fontSize: 9, color: theme.textMuted, textTransform: 'uppercase', letterSpacing: 1 }}>BTC.D</div>
             <div style={{ fontFamily: "'Share Tech Mono', monospace", fontWeight: 'bold' }}>{btcDominance}%</div>
           </div>
         </Tooltip>
-        <Tooltip statKey="USDT.D">
+        <Tooltip statKey="USDT.D" isDark={isDarkMode}>
           <div style={{ textAlign: 'center' }}>
-            <div style={{ fontSize: 9, color: '#64748b', textTransform: 'uppercase', letterSpacing: 1 }}>USDT.D</div>
+            <div style={{ fontSize: 9, color: theme.textMuted, textTransform: 'uppercase', letterSpacing: 1 }}>USDT.D</div>
             <div style={{ fontFamily: "'Share Tech Mono', monospace", fontWeight: 'bold' }}>{usdtDominance}%</div>
           </div>
         </Tooltip>
-        <Tooltip statKey="RSI">
+        <Tooltip statKey="RSI" isDark={isDarkMode}>
           <div style={{ textAlign: 'center' }}>
-            <div style={{ fontSize: 9, color: '#64748b', textTransform: 'uppercase', letterSpacing: 1 }}>RSI</div>
-            <div style={{ fontFamily: "'Share Tech Mono', monospace", fontWeight: 'bold', color: rsi > 70 ? '#f87171' : rsi < 30 ? '#4ade80' : 'white' }}>
+            <div style={{ fontSize: 9, color: theme.textMuted, textTransform: 'uppercase', letterSpacing: 1 }}>RSI</div>
+            <div style={{ fontFamily: "'Share Tech Mono', monospace", fontWeight: 'bold', color: rsi > 70 ? '#f87171' : rsi < 30 ? '#4ade80' : theme.text }}>
               {rsi.toFixed(0)}
             </div>
           </div>
         </Tooltip>
-        <Tooltip statKey="VOL">
+        <Tooltip statKey="VOL" isDark={isDarkMode}>
           <div style={{ textAlign: 'center' }}>
-            <div style={{ fontSize: 9, color: '#64748b', textTransform: 'uppercase', letterSpacing: 1 }}>24H VOL</div>
+            <div style={{ fontSize: 9, color: theme.textMuted, textTransform: 'uppercase', letterSpacing: 1 }}>24H VOL</div>
             <div style={{ fontFamily: "'Share Tech Mono', monospace", fontWeight: 'bold' }}>$42.5B</div>
           </div>
         </Tooltip>
-        <Tooltip statKey="L/S">
+        <Tooltip statKey="L/S" isDark={isDarkMode}>
           <div style={{ textAlign: 'center' }}>
-            <div style={{ fontSize: 9, color: '#64748b', textTransform: 'uppercase', letterSpacing: 1 }}>L/S</div>
+            <div style={{ fontSize: 9, color: theme.textMuted, textTransform: 'uppercase', letterSpacing: 1 }}>L/S</div>
             <div style={{ fontFamily: "'Share Tech Mono', monospace", fontWeight: 'bold', color: longShortRatio > 1 ? '#4ade80' : '#f87171' }}>
               {longShortRatio.toFixed(2)}
             </div>
           </div>
         </Tooltip>
-        <Tooltip statKey="F&G">
+        <Tooltip statKey="F&G" isDark={isDarkMode}>
           <div style={{ textAlign: 'center' }}>
-            <div style={{ fontSize: 9, color: '#64748b', textTransform: 'uppercase', letterSpacing: 1 }}>F&G</div>
+            <div style={{ fontSize: 9, color: theme.textMuted, textTransform: 'uppercase', letterSpacing: 1 }}>F&G</div>
             <div style={{ fontFamily: "'Share Tech Mono', monospace", fontWeight: 'bold', color: fearGreed.value >= 75 ? '#f87171' : fearGreed.value <= 25 ? '#4ade80' : '#facc15' }}>
               {fearGreed.value}
             </div>
@@ -1048,7 +1082,7 @@ export default function BTCBattle() {
       <div style={{ 
         textAlign: 'center', 
         padding: '16px 20px', 
-        background: 'rgba(250,204,21,0.05)',
+        background: isDarkMode ? 'rgba(250,204,21,0.05)' : 'rgba(250,204,21,0.1)',
         borderTop: '1px solid rgba(250,204,21,0.2)',
         position: 'relative', 
         zIndex: 10 
@@ -1063,27 +1097,27 @@ export default function BTCBattle() {
           }}
           style={{ 
             fontSize: 11, 
-            color: '#94a3b8', 
+            color: theme.textSecondary, 
             fontFamily: "'Share Tech Mono', monospace",
             cursor: 'pointer',
             padding: '8px 16px',
-            background: 'rgba(30,41,59,0.6)',
+            background: theme.bgSecondary,
             borderRadius: 8,
-            border: '1px solid rgba(255,255,255,0.1)',
+            border: `1px solid ${theme.border}`,
             display: 'inline-block',
             transition: 'all 0.2s',
           }}
         >
           0x8E48bCE9B40C7E0c13b200AEad4A357e6cA2de19
-          <span style={{ marginLeft: 8, fontSize: 10, color: '#64748b' }}>📋 Click to copy</span>
+          <span style={{ marginLeft: 8, fontSize: 10, color: theme.textMuted }}>📋 Click to copy</span>
         </div>
-        <div style={{ fontSize: 9, color: '#64748b', marginTop: 6 }}>
+        <div style={{ fontSize: 9, color: theme.textMuted, marginTop: 6 }}>
           ETH • USDC • Any token on Base 💙
         </div>
       </div>
 
       {/* Credits */}
-      <div style={{ textAlign: 'center', padding: 8, fontSize: 10, color: '#475569', position: 'relative', zIndex: 10 }}>
+      <div style={{ textAlign: 'center', padding: 8, fontSize: 10, color: theme.textMuted, position: 'relative', zIndex: 10 }}>
         Data: CoinGecko • Fear & Greed: Alternative.me • Built by QuantumShieldLabs
       </div>
 
@@ -1093,6 +1127,9 @@ export default function BTCBattle() {
           50% { opacity: 0.5; }
         }
       `}</style>
+    </div>
+  );
+}
     </div>
   );
 }

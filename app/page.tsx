@@ -1044,6 +1044,44 @@ export default function BTCBattle() {
         </Tooltip>
       </footer>
 
+      {/* Tip Wallet */}
+      <div style={{ 
+        textAlign: 'center', 
+        padding: '16px 20px', 
+        background: 'rgba(250,204,21,0.05)',
+        borderTop: '1px solid rgba(250,204,21,0.2)',
+        position: 'relative', 
+        zIndex: 10 
+      }}>
+        <div style={{ fontSize: 12, color: '#facc15', marginBottom: 6, fontWeight: 'bold' }}>
+          ☕ Support BTC Battle
+        </div>
+        <div 
+          onClick={() => {
+            navigator.clipboard.writeText('0x8E48bCE9B40C7E0c13b200AEad4A357e6cA2de19');
+            alert('Wallet address copied!');
+          }}
+          style={{ 
+            fontSize: 11, 
+            color: '#94a3b8', 
+            fontFamily: "'Share Tech Mono', monospace",
+            cursor: 'pointer',
+            padding: '8px 16px',
+            background: 'rgba(30,41,59,0.6)',
+            borderRadius: 8,
+            border: '1px solid rgba(255,255,255,0.1)',
+            display: 'inline-block',
+            transition: 'all 0.2s',
+          }}
+        >
+          0x8E48bCE9B40C7E0c13b200AEad4A357e6cA2de19
+          <span style={{ marginLeft: 8, fontSize: 10, color: '#64748b' }}>📋 Click to copy</span>
+        </div>
+        <div style={{ fontSize: 9, color: '#64748b', marginTop: 6 }}>
+          ETH • USDC • Any token on Base 💙
+        </div>
+      </div>
+
       {/* Credits */}
       <div style={{ textAlign: 'center', padding: 8, fontSize: 10, color: '#475569', position: 'relative', zIndex: 10 }}>
         Data: CoinGecko • Fear & Greed: Alternative.me • Built by QuantumShieldLabs

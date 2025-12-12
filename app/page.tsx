@@ -1165,6 +1165,3 @@ export default function BTCBattle() {
     </div>
   );
 }
-    </div>
-  );
-}

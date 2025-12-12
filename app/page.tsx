@@ -2,6 +2,23 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 
+// Safely import Farcaster SDK - may not be available in all contexts
+let sdk: any = null;
+if (typeof window !== 'undefined') {
+  try {
+    // Dynamic import for Farcaster frame SDK
+    import('@farcaster/frame-sdk').then(module => {
+      sdk = module.sdk;
+      // Call ready once SDK is loaded
+      sdk?.actions?.ready?.().catch(console.error);
+    }).catch(() => {
+      console.log('Farcaster SDK not available');
+    });
+  } catch (e) {
+    console.log('Farcaster SDK not available');
+  }
+}
+
 // Stat definitions for tooltips
 const statDefinitions: Record<string, { full: string; desc: string; bullish: string; bearish: string }> = {
   'BTC.D': {

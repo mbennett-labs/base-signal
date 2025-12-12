@@ -2,23 +2,6 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 
-// Safely import Farcaster SDK - may not be available in all contexts
-let sdk: any = null;
-if (typeof window !== 'undefined') {
-  try {
-    // Dynamic import for Farcaster frame SDK
-    import('@farcaster/frame-sdk').then(module => {
-      sdk = module.sdk;
-      // Call ready once SDK is loaded
-      sdk?.actions?.ready?.().catch(console.error);
-    }).catch(() => {
-      console.log('Farcaster SDK not available');
-    });
-  } catch (e) {
-    console.log('Farcaster SDK not available');
-  }
-}
-
 // Stat definitions for tooltips
 const statDefinitions: Record<string, { full: string; desc: string; bullish: string; bearish: string }> = {
   'BTC.D': {
@@ -261,6 +244,7 @@ export default function BTCBattle() {
   // Fetch Farcaster Casts (Bitcoin/Crypto channel)
   const fetchFarcaster = useCallback(async () => {
     try {
+      console.log('Fetching Farcaster data from Neynar...');
       // Fetch real casts from Neynar API - trending feed from bitcoin channel
       const response = await fetch(
         'https://api.neynar.com/v2/farcaster/feed/trending?limit=10&time_window=24h&channel_id=bitcoin',
@@ -272,11 +256,14 @@ export default function BTCBattle() {
         }
       );
       
+      console.log('Neynar response status:', response.status);
+      
       if (!response.ok) {
-        throw new Error('Neynar API error');
+        throw new Error(`Neynar API error: ${response.status}`);
       }
       
       const data = await response.json();
+      console.log('Neynar data received:', data.casts?.length, 'casts');
       
       // Transform Neynar response to our format
       const casts: FarcasterCast[] = data.casts?.slice(0, 8).map((cast: any) => ({
@@ -290,9 +277,11 @@ export default function BTCBattle() {
       })) || [];
       
       if (casts.length > 0) {
+        console.log('Setting real casts:', casts[0]?.author);
         setFarcasterCasts(casts);
       } else {
         // Fallback to mock data if API returns empty
+        console.log('No casts, using fallback');
         setFarcasterCasts(getMockCasts());
       }
     } catch (e) {
@@ -301,29 +290,29 @@ export default function BTCBattle() {
     }
   }, []);
 
-  // Fallback mock data
+  // Fallback mock data - v2 updated
   const getMockCasts = (): FarcasterCast[] => [
     { 
       id: '1', 
-      author: 'btc_updates', 
+      author: 'btc_signal', 
       authorPfp: '₿',
-      text: 'Bitcoin market update: Watching key resistance levels. Volume picking up.',
+      text: '[Fallback] Bitcoin market update: Watching key resistance levels.',
       timestamp: new Date(Date.now() - 1000 * 60 * 15),
       likes: 124,
       channel: 'bitcoin'
     },
     { 
       id: '2', 
-      author: 'base_builder', 
+      author: 'base_dev', 
       authorPfp: '🔵',
-      text: 'Building onchain is the future. Base ecosystem keeps shipping.',
+      text: '[Fallback] Building onchain is the future. Base ecosystem shipping.',
       timestamp: new Date(Date.now() - 1000 * 60 * 45),
       likes: 89,
       channel: 'base'
     },
     { 
       id: '3', 
-      author: 'crypto_trader', 
+      author: 'onchain_trader', 
       authorPfp: '📈',
       text: 'Market structure looking interesting here. Keeping an eye on BTC dominance.',
       timestamp: new Date(Date.now() - 1000 * 60 * 90),
@@ -364,11 +353,16 @@ export default function BTCBattle() {
 
   // Initialize
   useEffect(() => {
+    // Signal to Farcaster that the Mini App is ready
+    import('@farcaster/frame-sdk').then(({ sdk }) => {
+      sdk.actions.ready().catch(console.error);
+    }).catch(() => console.log('Not in Farcaster context'));
+
     fetchPrice();
     fetchGlobal();
     fetchFearGreed();
-    fetchNews();
     fetchFarcaster();
+    fetchNews();
     
     // Generate initial whales
     const initial = Array(4).fill(0).map(() => generateWhaleAlert());

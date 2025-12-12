@@ -21,7 +21,11 @@ export const minikitConfig = {
     name: "BTC Battle",
     subtitle: "Real-Time Whale War",
     description: "Watch bulls and bears fight in real-time! Track whale movements, market sentiment, and see who's winning the battle for Bitcoin. Live tug-of-war visualization powered by on-chain data.",
-    screenshotUrls: [`${ROOT_URL}/screenshot.png`],
+    screenshotUrls: [
+      `${ROOT_URL}/screenshot-1.png`,
+      `${ROOT_URL}/screenshot-2-news.png`,
+      `${ROOT_URL}/screenshot-3-farcaster.png`
+    ],
     iconUrl: `${ROOT_URL}/icon.png`,
     splashImageUrl: `${ROOT_URL}/splash.png`,
     splashBackgroundColor: "#0a0a0f",

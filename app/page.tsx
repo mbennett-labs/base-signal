@@ -241,47 +241,69 @@ export default function BTCBattle() {
     }
   }, []);
 
-  // Fetch Farcaster Casts (Bitcoin/Crypto channel)
+  // Fetch Farcaster Casts using Pinata FREE Hub API
   const fetchFarcaster = useCallback(async () => {
     try {
-      console.log('Fetching Farcaster data from Neynar...');
-      // Fetch real casts from Neynar API - trending feed from bitcoin channel
-      const response = await fetch(
-        'https://api.neynar.com/v2/farcaster/feed/trending?limit=10&time_window=24h&channel_id=bitcoin',
-        {
-          headers: {
-            'accept': 'application/json',
-            'x-api-key': 'AD6A7C53-8880-442B-A4F7-9E03523C91B1'
+      console.log('Fetching Farcaster data from Pinata Hub (FREE)...');
+      
+      // Fetch casts from popular crypto accounts using Pinata's free hub
+      // FIDs: dwr.eth=3, vitalik.eth=5650, jessepollak=99
+      const fids = [3, 5650, 99, 2, 1317]; // dwr, vitalik, jesse, v, cassie
+      const allCasts: FarcasterCast[] = [];
+      
+      for (const fid of fids.slice(0, 3)) { // Limit to 3 users
+        try {
+          const response = await fetch(
+            `https://hub.pinata.cloud/v1/castsByFid?fid=${fid}&pageSize=3&reverse=true`
+          );
+          
+          if (response.ok) {
+            const data = await response.json();
+            console.log(`Pinata Hub: Got ${data.messages?.length || 0} casts for FID ${fid}`);
+            
+            // Also fetch user data for username
+            const userResponse = await fetch(
+              `https://hub.pinata.cloud/v1/userDataByFid?fid=${fid}`
+            );
+            const userData = userResponse.ok ? await userResponse.json() : null;
+            
+            // Find username from user data
+            let username = `fid:${fid}`;
+            let pfpUrl = '';
+            if (userData?.messages) {
+              for (const msg of userData.messages) {
+                if (msg.data?.userDataBody?.type === 'USER_DATA_TYPE_USERNAME') {
+                  username = msg.data.userDataBody.value;
+                }
+                if (msg.data?.userDataBody?.type === 'USER_DATA_TYPE_PFP') {
+                  pfpUrl = msg.data.userDataBody.value;
+                }
+              }
+            }
+            
+            // Transform hub response to our format
+            const casts = data.messages?.slice(0, 2).map((msg: any) => ({
+              id: msg.hash || Math.random().toString(),
+              author: username,
+              authorPfp: pfpUrl,
+              text: msg.data?.castAddBody?.text?.slice(0, 200) || 'Cast content',
+              timestamp: new Date(msg.data?.timestamp ? msg.data.timestamp * 1000 : Date.now()),
+              likes: Math.floor(Math.random() * 100) + 10, // Hub doesn't return reaction counts
+              channel: 'crypto'
+            })) || [];
+            
+            allCasts.push(...casts);
           }
+        } catch (err) {
+          console.log(`Failed to fetch FID ${fid}:`, err);
         }
-      );
-      
-      console.log('Neynar response status:', response.status);
-      
-      if (!response.ok) {
-        throw new Error(`Neynar API error: ${response.status}`);
       }
       
-      const data = await response.json();
-      console.log('Neynar data received:', data.casts?.length, 'casts');
-      
-      // Transform Neynar response to our format
-      const casts: FarcasterCast[] = data.casts?.slice(0, 8).map((cast: any) => ({
-        id: cast.hash,
-        author: cast.author?.username || 'unknown',
-        authorPfp: cast.author?.pfp_url || '',
-        text: cast.text?.slice(0, 200) + (cast.text?.length > 200 ? '...' : ''),
-        timestamp: new Date(cast.timestamp),
-        likes: cast.reactions?.likes_count || 0,
-        channel: cast.channel?.id || 'bitcoin'
-      })) || [];
-      
-      if (casts.length > 0) {
-        console.log('Setting real casts:', casts[0]?.author);
-        setFarcasterCasts(casts);
+      if (allCasts.length > 0) {
+        console.log('Setting real casts from Pinata:', allCasts.length);
+        setFarcasterCasts(allCasts.slice(0, 8));
       } else {
-        // Fallback to mock data if API returns empty
-        console.log('No casts, using fallback');
+        console.log('No casts from Pinata, using fallback');
         setFarcasterCasts(getMockCasts());
       }
     } catch (e) {

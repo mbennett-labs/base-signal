@@ -619,18 +619,13 @@ export default function BTCBattle() {
               </div>
             </div>
             
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
               {farcasterCasts.map((cast) => (
                 <div key={cast.id} style={{ padding: 14, background: theme.bgSecondary, borderRadius: 12, border: '1px solid ' + theme.border }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
                     <div style={{ width: 36, height: 36, borderRadius: '50%', background: 'linear-gradient(135deg, #8b5cf6, #6366f1)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18 }}>
                       {cast.authorPfp || cast.author.charAt(0).toUpperCase()}
                     </div>
-                    <div style={{ flex: 1 }}>
-                      <div style={{ fontSize: 13, fontWeight: 'bold', color: theme.text }}>@{cast.author}</div>
-                      <div style={{ fontSize: 10, color: theme.textMuted }}>{formatTimeAgo(cast.timestamp)} • /{cast.channel}</div>
-                    </div>
-                  </div>
                   <div style={{ fontSize: 14, lineHeight: 1.6, color: theme.text, marginBottom: 10, opacity: 0.95 }}>{cast.text}</div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 16, fontSize: 12, color: theme.textMuted }}>
                     <span>❤️ {cast.likes}</span>

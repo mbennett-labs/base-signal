@@ -19,6 +19,31 @@
 - [x] Add working news article links (Farcaster SDK)
 - [x] Close Neynar API security issue (switched to Pinata Hub)
 - [x] Submit for Base Featured placement
+---
+---
+
+## 🛠️ Technical To-Do (Priority)
+
+### Next Session
+- [ ] **Live Farcaster Feed** - Currently static curated content
+  - Issue: Pinata Hub API gets CORS blocked + 429 rate limits from client-side
+  - Solution: Create `/app/api/farcaster/route.ts` server-side route
+  - Estimated time: 15-20 mins
+
+### Backlog
+- [ ] Real Whale Data (Whale Alert API or custom listener)
+- [ ] CoinGecko server-side proxy (avoid rate limits)
+- [ ] User authentication (Sign in with Farcaster)
+- [ ] Price alerts
+- [ ] Historical battle data
+
+### Fixed ✅
+- [x] News article clickable links (Farcaster SDK)
+- [x] Manifest validation errors
+- [x] Account association signature  
+- [x] Farcaster feed text overlap glitch
+- [x] Neynar API key exposure
+
 
 ---
 

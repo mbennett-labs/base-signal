@@ -265,34 +265,37 @@ export default function BTCBattle() {
       window.open(url, '_blank', 'noopener,noreferrer');
     }
   }, []);
-  const fetchFarcaster = useCallback(async () => {
+ const fetchFarcaster = useCallback(async () => {
     try {
       const fids = [3, 5650, 99];
       const allCasts: FarcasterCast[] = [];
       
       for (const fid of fids) {
         try {
+          // First fetch user data to get username
+          const userResponse = await fetch('https://hub.pinata.cloud/v1/userDataByFid?fid=' + fid);
+          const userData = userResponse.ok ? await userResponse.json() : null;
+          
+          let username = 'user_' + fid;
+          let pfpUrl = '';
+          if (userData?.messages) {
+            for (const msg of userData.messages) {
+              if (msg.data?.userDataBody?.type === 'USER_DATA_TYPE_USERNAME') {
+                username = msg.data.userDataBody.value;
+              }
+              if (msg.data?.userDataBody?.type === 'USER_DATA_TYPE_PFP') {
+                pfpUrl = msg.data.userDataBody.value;
+              }
+            }
+          }
+          
+          // Then fetch casts
           const response = await fetch('https://hub.pinata.cloud/v1/castsByFid?fid=' + fid + '&pageSize=3&reverse=true');
           if (response.ok) {
             const data = await response.json();
-            const userResponse = await fetch('https://hub.pinata.cloud/v1/userDataByFid?fid=' + fid);
-            const userData = userResponse.ok ? await userResponse.json() : null;
             
-            let username = 'fid:' + fid;
-            let pfpUrl = '';
-            if (userData?.messages) {
-              for (const msg of userData.messages) {
-                if (msg.data?.userDataBody?.type === 'USER_DATA_TYPE_USERNAME') {
-                  username = msg.data.userDataBody.value;
-                }
-                if (msg.data?.userDataBody?.type === 'USER_DATA_TYPE_PFP') {
-                  pfpUrl = msg.data.userDataBody.value;
-                }
-              }
-            }
-            
-            const casts = data.messages?.slice(0, 2).map((msg: any) => ({
-              id: msg.hash || Math.random().toString(),
+            const casts = data.messages?.slice(0, 2).map((msg: any, index: number) => ({
+              id: fid + '_' + index + '_' + Date.now(),
               author: username,
               authorPfp: pfpUrl,
               text: msg.data?.castAddBody?.text?.slice(0, 200) || 'Cast content',

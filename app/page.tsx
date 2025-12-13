@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useCallback } from 'react';
+import { sdk } from '@farcaster/frame-sdk';
 
 // Stat definitions for tooltips
 const statDefinitions: Record<string, { full: string; desc: string; bullish: string; bearish: string }> = {
@@ -100,7 +101,7 @@ function Tooltip({ statKey, children, isDark = true }: { statKey: string; childr
           width: 250,
           padding: 12,
           background: isDark ? '#1e293b' : '#ffffff',
-          border: `1px solid ${isDark ? '#475569' : '#e2e8f0'}`,
+          border: '1px solid ' + (isDark ? '#475569' : '#e2e8f0'),
           borderRadius: 8,
           boxShadow: isDark ? '0 10px 40px rgba(0,0,0,0.5)' : '0 10px 40px rgba(0,0,0,0.15)',
           zIndex: 50,
@@ -128,13 +129,24 @@ export default function BTCBattle() {
   const [whaleAlerts, setWhaleAlerts] = useState<WhaleAlert[]>([]);
   const [bullPower, setBullPower] = useState(12.4);
   const [bearPower, setBearPower] = useState(9.2);
-  const [lastPrice, setLastPrice] = useState(98432);
   const [priceFlash, setPriceFlash] = useState('');
   const [showLegend, setShowLegend] = useState(false);
   const [newsItems, setNewsItems] = useState<NewsItem[]>([]);
   const [farcasterCasts, setFarcasterCasts] = useState<FarcasterCast[]>([]);
   const [activeTab, setActiveTab] = useState<'battle' | 'news' | 'farcaster'>('battle');
   const [isDarkMode, setIsDarkMode] = useState(true);
+
+  // Initialize Farcaster SDK
+  useEffect(() => {
+    const initSdk = async () => {
+      try {
+        await sdk.actions.ready();
+      } catch (e) {
+        console.log('SDK ready called');
+      }
+    };
+    initSdk();
+  }, []);
 
   // Theme colors
   const theme = {
@@ -145,13 +157,9 @@ export default function BTCBattle() {
     textSecondary: isDarkMode ? '#94a3b8' : '#64748b',
     textMuted: isDarkMode ? '#64748b' : '#94a3b8',
     border: isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)',
-    borderAccent: isDarkMode ? 'rgba(250,204,21,0.5)' : 'rgba(250,204,21,0.7)',
-    tooltipBg: isDarkMode ? '#1e293b' : '#ffffff',
-    tooltipBorder: isDarkMode ? '#475569' : '#e2e8f0',
   };
 
   const exchanges = ['Coinbase', 'Binance', 'Kraken', 'Unknown Wallet', 'Bitfinex', 'OKX'];
-
   const formatPrice = (p: number) => '$' + Math.round(p).toLocaleString();
 
   const generateWhaleAlert = useCallback((): WhaleAlert => {
@@ -166,7 +174,6 @@ export default function BTCBattle() {
     };
   }, [price]);
 
-  // Fetch real BTC price
   const fetchPrice = useCallback(async () => {
     try {
       const res = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=usd&include_24hr_change=true');
@@ -180,7 +187,6 @@ export default function BTCBattle() {
     }
   }, []);
 
-  // Fetch global data
   const fetchGlobal = useCallback(async () => {
     try {
       const res = await fetch('https://api.coingecko.com/api/v3/global');
@@ -194,7 +200,6 @@ export default function BTCBattle() {
     }
   }, []);
 
-  // Fetch Fear & Greed
   const fetchFearGreed = useCallback(async () => {
     try {
       const res = await fetch('https://api.alternative.me/fng/');
@@ -210,65 +215,61 @@ export default function BTCBattle() {
     }
   }, []);
 
-  // Fetch CryptoPanic News
+  // Fetch News with REAL URLs
   const fetchNews = useCallback(async () => {
     try {
-      // CryptoPanic free API - no auth needed for public posts
-      const res = await fetch('https://cryptopanic.com/api/free/v1/posts/?currencies=BTC&kind=news');
+      const res = await fetch('https://cryptopanic.com/api/free/v1/posts/?currencies=BTC&kind=news&public=true');
       const data = await res.json();
-      if (data.results) {
+      if (data.results && data.results.length > 0) {
         const news: NewsItem[] = data.results.slice(0, 10).map((item: any) => ({
-          id: item.id || String(Math.random()),
+          id: item.id?.toString() || String(Math.random()),
           title: item.title,
           source: item.source?.title || 'Unknown',
           sentiment: item.votes?.positive > item.votes?.negative ? 'bullish' : 
                      item.votes?.negative > item.votes?.positive ? 'bearish' : 'neutral',
-          url: item.url,
+          url: item.url || 'https://cryptopanic.com/news/' + item.id,
           timestamp: new Date(item.published_at),
         }));
         setNewsItems(news);
+      } else {
+        throw new Error('No results');
       }
     } catch (e) {
-      console.log('CryptoPanic API unavailable, using mock news');
-      // Fallback mock news
+      console.log('Using fallback news');
       setNewsItems([
-        { id: '1', title: 'Bitcoin ETF inflows surge past $500M', source: 'CoinDesk', sentiment: 'bullish', url: '#', timestamp: new Date() },
-        { id: '2', title: 'Whale moves 5,000 BTC to exchange', source: 'Whale Alert', sentiment: 'bearish', url: '#', timestamp: new Date() },
-        { id: '3', title: 'MicroStrategy adds to Bitcoin holdings', source: 'Bloomberg', sentiment: 'bullish', url: '#', timestamp: new Date() },
-        { id: '4', title: 'Fed signals rate decision upcoming', source: 'Reuters', sentiment: 'neutral', url: '#', timestamp: new Date() },
-        { id: '5', title: 'Bitcoin breaks key resistance level', source: 'TradingView', sentiment: 'bullish', url: '#', timestamp: new Date() },
+        { id: '1', title: 'Latest Bitcoin Market Analysis & Price Updates', source: 'CoinDesk', sentiment: 'bullish', url: 'https://www.coindesk.com/price/bitcoin/', timestamp: new Date() },
+        { id: '2', title: 'Large Bitcoin Transactions Tracked in Real-Time', source: 'Whale Alert', sentiment: 'bearish', url: 'https://whale-alert.io/', timestamp: new Date() },
+        { id: '3', title: 'Bitcoin News & Market Updates', source: 'CoinTelegraph', sentiment: 'bullish', url: 'https://cointelegraph.com/tags/bitcoin', timestamp: new Date() },
+        { id: '4', title: 'Cryptocurrency Market Overview', source: 'Bloomberg Crypto', sentiment: 'neutral', url: 'https://www.bloomberg.com/crypto', timestamp: new Date() },
+        { id: '5', title: 'Bitcoin Technical Analysis & Charts', source: 'TradingView', sentiment: 'bullish', url: 'https://www.tradingview.com/symbols/BTCUSD/', timestamp: new Date() },
       ]);
     }
   }, []);
 
-  // Fetch Farcaster Casts using Pinata FREE Hub API
+  // Open URL using Farcaster SDK
+  const openUrl = useCallback((url: string) => {
+    if (!url || url === '#') return;
+    try {
+      sdk.actions.openUrl(url);
+    } catch (e) {
+      window.open(url, '_blank', 'noopener,noreferrer');
+    }
+  }, []);
+
   const fetchFarcaster = useCallback(async () => {
     try {
-      console.log('Fetching Farcaster data from Pinata Hub (FREE)...');
-      
-      // Fetch casts from popular crypto accounts using Pinata's free hub
-      // FIDs: dwr.eth=3, vitalik.eth=5650, jessepollak=99
-      const fids = [3, 5650, 99, 2, 1317]; // dwr, vitalik, jesse, v, cassie
+      const fids = [3, 5650, 99];
       const allCasts: FarcasterCast[] = [];
       
-      for (const fid of fids.slice(0, 3)) { // Limit to 3 users
+      for (const fid of fids) {
         try {
-          const response = await fetch(
-            `https://hub.pinata.cloud/v1/castsByFid?fid=${fid}&pageSize=3&reverse=true`
-          );
-          
+          const response = await fetch('https://hub.pinata.cloud/v1/castsByFid?fid=' + fid + '&pageSize=3&reverse=true');
           if (response.ok) {
             const data = await response.json();
-            console.log(`Pinata Hub: Got ${data.messages?.length || 0} casts for FID ${fid}`);
-            
-            // Also fetch user data for username
-            const userResponse = await fetch(
-              `https://hub.pinata.cloud/v1/userDataByFid?fid=${fid}`
-            );
+            const userResponse = await fetch('https://hub.pinata.cloud/v1/userDataByFid?fid=' + fid);
             const userData = userResponse.ok ? await userResponse.json() : null;
             
-            // Find username from user data
-            let username = `fid:${fid}`;
+            let username = 'fid:' + fid;
             let pfpUrl = '';
             if (userData?.messages) {
               for (const msg of userData.messages) {
@@ -281,142 +282,90 @@ export default function BTCBattle() {
               }
             }
             
-            // Transform hub response to our format
             const casts = data.messages?.slice(0, 2).map((msg: any) => ({
               id: msg.hash || Math.random().toString(),
               author: username,
               authorPfp: pfpUrl,
               text: msg.data?.castAddBody?.text?.slice(0, 200) || 'Cast content',
               timestamp: new Date(msg.data?.timestamp ? msg.data.timestamp * 1000 : Date.now()),
-              likes: Math.floor(Math.random() * 100) + 10, // Hub doesn't return reaction counts
+              likes: Math.floor(Math.random() * 100) + 10,
               channel: 'crypto'
             })) || [];
             
             allCasts.push(...casts);
           }
         } catch (err) {
-          console.log(`Failed to fetch FID ${fid}:`, err);
+          console.log('Failed to fetch FID ' + fid);
         }
       }
       
       if (allCasts.length > 0) {
-        console.log('Setting real casts from Pinata:', allCasts.length);
         setFarcasterCasts(allCasts.slice(0, 8));
       } else {
-        console.log('No casts from Pinata, using fallback');
-        setFarcasterCasts(getMockCasts());
+        setFarcasterCasts([
+          { id: '1', author: 'btc_signal', authorPfp: '₿', text: 'Bitcoin market update: Watching key resistance levels.', timestamp: new Date(Date.now() - 1000 * 60 * 15), likes: 124, channel: 'bitcoin' },
+          { id: '2', author: 'base_dev', authorPfp: '🔵', text: 'Building onchain is the future. Base ecosystem shipping.', timestamp: new Date(Date.now() - 1000 * 60 * 45), likes: 89, channel: 'base' },
+        ]);
       }
     } catch (e) {
-      console.log('Farcaster fetch failed, using mock data', e);
-      setFarcasterCasts(getMockCasts());
+      console.log('Farcaster fetch failed');
     }
   }, []);
 
-  // Fallback mock data - v2 updated
-  const getMockCasts = (): FarcasterCast[] => [
-    { 
-      id: '1', 
-      author: 'btc_signal', 
-      authorPfp: '₿',
-      text: '[Fallback] Bitcoin market update: Watching key resistance levels.',
-      timestamp: new Date(Date.now() - 1000 * 60 * 15),
-      likes: 124,
-      channel: 'bitcoin'
-    },
-    { 
-      id: '2', 
-      author: 'base_dev', 
-      authorPfp: '🔵',
-      text: '[Fallback] Building onchain is the future. Base ecosystem shipping.',
-      timestamp: new Date(Date.now() - 1000 * 60 * 45),
-      likes: 89,
-      channel: 'base'
-    },
-    { 
-      id: '3', 
-      author: 'onchain_trader', 
-      authorPfp: '📈',
-      text: 'Market structure looking interesting here. Keeping an eye on BTC dominance.',
-      timestamp: new Date(Date.now() - 1000 * 60 * 90),
-      likes: 156,
-      channel: 'trading'
-    },
-  ];
-
-  // Calculate battle
   const calculateBattle = useCallback(() => {
     let bull = 0, bear = 0;
-    
     if (priceChange > 0) bull += Math.min(priceChange * 2, 10);
     else bear += Math.min(Math.abs(priceChange) * 2, 10);
-    
     if (fearGreed.value > 50) bull += (fearGreed.value - 50) / 10;
     else bear += (50 - fearGreed.value) / 10;
-
     if (rsi > 50) bull += (rsi - 50) / 20;
     else bear += (50 - rsi) / 20;
-
     if (longShortRatio > 1) bull += (longShortRatio - 1) * 5;
     else bear += (1 - longShortRatio) * 5;
-    
     whaleAlerts.slice(-10).forEach(w => {
       if (w.type === 'buy') bull += w.amount / 500;
       else bear += w.amount / 500;
     });
-    
     setBullPower(bull);
     setBearPower(bear);
-    
     const total = bull + bear;
     if (total > 0) {
       setTugPosition(Math.max(15, Math.min(85, 50 - ((bull - bear) / total) * 35)));
     }
   }, [priceChange, fearGreed, rsi, longShortRatio, whaleAlerts]);
 
-  // Initialize
   useEffect(() => {
     fetchPrice();
     fetchGlobal();
     fetchFearGreed();
     fetchFarcaster();
     fetchNews();
-    
-    // Generate initial whales
     const initial = Array(4).fill(0).map(() => generateWhaleAlert());
     setWhaleAlerts(initial);
     
-    // Price tick simulation
     const priceTick = setInterval(() => {
       setPrice(prev => {
         const newPrice = Math.round(prev + (Math.random() - 0.5) * 80);
         setPriceFlash(newPrice > prev ? 'green' : newPrice < prev ? 'red' : '');
         setTimeout(() => setPriceFlash(''), 300);
-        setLastPrice(prev);
         return newPrice;
       });
-
       if (Math.random() > 0.85) {
         setRsi(prev => Math.max(20, Math.min(80, prev + (Math.random() - 0.5) * 5)));
         setLongShortRatio(prev => Math.max(0.5, Math.min(2, prev + (Math.random() - 0.5) * 0.1)));
       }
     }, 2000);
     
-    // Whale generation
     const whaleGen = setInterval(() => {
       if (Math.random() > 0.6) {
         setWhaleAlerts(prev => [generateWhaleAlert(), ...prev].slice(0, 15));
       }
     }, 4000);
     
-    // Real data fetch
-    const dataFetch = setInterval(() => {
-      fetchPrice();
-      fetchGlobal();
-    }, 30000);
-
+    const dataFetch = setInterval(() => { fetchPrice(); fetchGlobal(); }, 30000);
     const fgFetch = setInterval(fetchFearGreed, 300000);
-    const newsFetch = setInterval(fetchNews, 120000); // Every 2 mins
-    const farcasterFetch = setInterval(fetchFarcaster, 60000); // Every 1 min
+    const newsFetch = setInterval(fetchNews, 120000);
+    const farcasterFetch = setInterval(fetchFarcaster, 60000);
     
     return () => {
       clearInterval(priceTick);
@@ -428,9 +377,7 @@ export default function BTCBattle() {
     };
   }, [fetchPrice, fetchGlobal, fetchFearGreed, fetchNews, fetchFarcaster, generateWhaleAlert]);
 
-  useEffect(() => {
-    calculateBattle();
-  }, [calculateBattle]);
+  useEffect(() => { calculateBattle(); }, [calculateBattle]);
 
   const getWeatherIcon = () => {
     if (fearGreed.value >= 75) return '☀️';
@@ -442,235 +389,53 @@ export default function BTCBattle() {
   const formatTimeAgo = (date: Date) => {
     const mins = Math.floor((Date.now() - date.getTime()) / 60000);
     if (mins < 1) return 'now';
-    if (mins < 60) return `${mins}m`;
+    if (mins < 60) return mins + 'm';
     const hours = Math.floor(mins / 60);
-    if (hours < 24) return `${hours}h`;
-    return `${Math.floor(hours / 24)}d`;
-  };
-
-  const styles = {
-    container: {
-      minHeight: '100vh',
-      background: theme.bg,
-      color: theme.text,
-      fontFamily: "'Rajdhani', system-ui, sans-serif",
-      overflow: 'hidden' as const,
-      position: 'relative' as const,
-      transition: 'background 0.3s, color 0.3s',
-    },
-    bgGlow: {
-      position: 'fixed' as const,
-      inset: 0,
-      pointerEvents: 'none' as const,
-      zIndex: 0,
-    },
-    header: {
-      position: 'relative' as const,
-      zIndex: 10,
-      display: 'flex',
-      justifyContent: 'space-between',
-      alignItems: 'center',
-      padding: '16px 20px',
-      borderBottom: `1px solid ${theme.border}`,
-      background: isDarkMode ? 'rgba(10,10,15,0.9)' : 'rgba(255,255,255,0.95)',
-      backdropFilter: 'blur(10px)',
-      flexWrap: 'wrap' as const,
-      gap: 12,
-    },
-    title: {
-      fontSize: 22,
-      fontWeight: 900,
-      fontFamily: "'Orbitron', sans-serif",
-      letterSpacing: 2,
-      margin: 0,
-    },
-    main: {
-      position: 'relative' as const,
-      zIndex: 10,
-      padding: '20px',
-    },
-    card: {
-      background: isDarkMode ? 'rgba(30,41,59,0.5)' : 'rgba(241,245,249,0.8)',
-      borderRadius: 16,
-      border: `1px solid ${theme.border}`,
-      padding: 20,
-      marginBottom: 20,
-    },
-    footer: {
-      position: 'relative' as const,
-      zIndex: 10,
-      display: 'flex',
-      justifyContent: 'center',
-      gap: 24,
-      padding: '16px 20px',
-      borderTop: `1px solid ${theme.border}`,
-      background: isDarkMode ? 'rgba(10,10,15,0.95)' : 'rgba(255,255,255,0.95)',
-      backdropFilter: 'blur(10px)',
-      flexWrap: 'wrap' as const,
-    },
+    if (hours < 24) return hours + 'h';
+    return Math.floor(hours / 24) + 'd';
   };
 
   return (
-    <div style={styles.container}>
+    <div style={{ minHeight: '100vh', background: theme.bg, color: theme.text, fontFamily: "'Rajdhani', system-ui, sans-serif", position: 'relative' }}>
       {/* Background Effects */}
-      <div style={styles.bgGlow}>
-        <div style={{
-          position: 'absolute',
-          left: -150,
-          top: '50%',
-          transform: 'translateY(-50%)',
-          width: 400,
-          height: 400,
-          background: '#22c55e',
-          borderRadius: '50%',
-          filter: 'blur(150px)',
-          opacity: 0.15,
-        }} />
-        <div style={{
-          position: 'absolute',
-          right: -150,
-          top: '50%',
-          transform: 'translateY(-50%)',
-          width: 400,
-          height: 400,
-          background: '#ef4444',
-          borderRadius: '50%',
-          filter: 'blur(150px)',
-          opacity: 0.15,
-        }} />
+      <div style={{ position: 'fixed', inset: 0, pointerEvents: 'none', zIndex: 0 }}>
+        <div style={{ position: 'absolute', left: -150, top: '50%', transform: 'translateY(-50%)', width: 400, height: 400, background: '#22c55e', borderRadius: '50%', filter: 'blur(150px)', opacity: 0.15 }} />
+        <div style={{ position: 'absolute', right: -150, top: '50%', transform: 'translateY(-50%)', width: 400, height: 400, background: '#ef4444', borderRadius: '50%', filter: 'blur(150px)', opacity: 0.15 }} />
       </div>
 
       {/* Header */}
-      <header style={styles.header}>
+      <header style={{ position: 'relative', zIndex: 10, display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px 20px', borderBottom: '1px solid ' + theme.border, background: isDarkMode ? 'rgba(10,10,15,0.9)' : 'rgba(255,255,255,0.95)', backdropFilter: 'blur(10px)', flexWrap: 'wrap', gap: 12 }}>
         <div>
-          <h1 style={styles.title}>
+          <h1 style={{ fontSize: 22, fontWeight: 900, fontFamily: "'Orbitron', sans-serif", letterSpacing: 2, margin: 0 }}>
             <span style={{ color: '#facc15', textShadow: '0 0 20px rgba(250,204,21,0.5)' }}>BTC</span>
             <span style={{ marginLeft: 8 }}>BATTLE</span>
           </h1>
-          <span style={{ fontSize: 11, color: '#64748b', textTransform: 'uppercase', letterSpacing: 2 }}>
-            Real-Time Whale War
-          </span>
+          <span style={{ fontSize: 11, color: '#64748b', textTransform: 'uppercase', letterSpacing: 2 }}>Real-Time Whale War</span>
         </div>
         
-        <div style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: 10,
-          padding: '8px 16px',
-          background: 'rgba(51,65,85,0.5)',
-          borderRadius: 20,
-          border: '1px solid rgba(255,255,255,0.1)',
-        }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 16px', background: 'rgba(51,65,85,0.5)', borderRadius: 20, border: '1px solid rgba(255,255,255,0.1)' }}>
           <span style={{ fontSize: 20 }}>{getWeatherIcon()}</span>
           <span style={{ fontSize: 13, textTransform: 'uppercase' }}>{fearGreed.text}</span>
-          <span style={{ fontFamily: "'Share Tech Mono', monospace", fontWeight: 'bold', color: '#facc15' }}>
-            {fearGreed.value}
-          </span>
+          <span style={{ fontFamily: "'Share Tech Mono', monospace", fontWeight: 'bold', color: '#facc15' }}>{fearGreed.value}</span>
           <span style={{ color: '#64748b', fontSize: 11 }}>/100</span>
         </div>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-          <button
-            onClick={() => setShowLegend(!showLegend)}
-            style={{
-              fontSize: 11,
-              padding: '6px 12px',
-              background: '#334155',
-              border: '1px solid #475569',
-              borderRadius: 8,
-              color: 'white',
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              gap: 4,
-            }}
-          >
+          <button onClick={() => setShowLegend(!showLegend)} style={{ fontSize: 11, padding: '6px 12px', background: '#334155', border: '1px solid #475569', borderRadius: 8, color: 'white', cursor: 'pointer' }}>
             📖 {showLegend ? 'Hide' : 'Legend'}
           </button>
-          <button
-            onClick={() => setIsDarkMode(!isDarkMode)}
-            style={{
-              fontSize: 11,
-              padding: '6px 12px',
-              background: isDarkMode ? 'rgba(51,65,85,0.5)' : 'rgba(241,245,249,0.9)',
-              border: `1px solid ${theme.border}`,
-              borderRadius: 8,
-              color: theme.textSecondary,
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              gap: 4,
-            }}
-          >
-            {isDarkMode ? '☀️' : '🌙'} {isDarkMode ? 'Light' : 'Dark'}
+          <button onClick={() => setIsDarkMode(!isDarkMode)} style={{ fontSize: 11, padding: '6px 12px', background: isDarkMode ? 'rgba(51,65,85,0.5)' : 'rgba(241,245,249,0.9)', border: '1px solid ' + theme.border, borderRadius: 8, color: theme.textSecondary, cursor: 'pointer' }}>
+            {isDarkMode ? '☀️ Light' : '🌙 Dark'}
           </button>
           <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 11, color: theme.textMuted }}>
-            <span style={{
-              width: 8,
-              height: 8,
-              background: '#4ade80',
-              borderRadius: '50%',
-              animation: 'pulse 1.5s ease-in-out infinite',
-            }} />
+            <span style={{ width: 8, height: 8, background: '#4ade80', borderRadius: '50%', animation: 'pulse 1.5s ease-in-out infinite' }} />
             LIVE
           </div>
         </div>
       </header>
 
-      {/* Legend Panel */}
-      {showLegend && (
-        <div style={{
-          margin: '0 20px',
-          marginTop: 16,
-          padding: 16,
-          background: theme.tooltipBg,
-          border: `1px solid ${theme.tooltipBorder}`,
-          borderRadius: 12,
-          position: 'relative',
-          zIndex: 20,
-          color: theme.text,
-        }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 12 }}>
-            <h3 style={{ fontSize: 13, fontWeight: 'bold', color: '#facc15', margin: 0 }}>📖 QUICK REFERENCE</h3>
-            <button onClick={() => setShowLegend(false)} style={{ background: 'none', border: 'none', color: theme.textMuted, cursor: 'pointer' }}>✕</button>
-          </div>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 16, fontSize: 11 }}>
-            <div>
-              <div style={{ fontWeight: 'bold', marginBottom: 4 }}>⚔️ Tug of War</div>
-              <div style={{ color: theme.textSecondary }}>
-                <span style={{ color: '#4ade80' }}>← Bull Zone:</span> Bulls winning<br/>
-                <span style={{ color: '#f87171' }}>Bear Zone →:</span> Bears winning
-              </div>
-            </div>
-            <div>
-              <div style={{ fontWeight: 'bold', marginBottom: 4 }}>🐋 Whale Alerts</div>
-              <div style={{ color: theme.textSecondary }}>
-                <span style={{ color: '#4ade80' }}>🟢 BUY:</span> Bullish pressure<br/>
-                <span style={{ color: '#f87171' }}>🔴 SELL:</span> Bearish pressure
-              </div>
-            </div>
-            <div>
-              <div style={{ fontWeight: 'bold', marginBottom: 4 }}>🌤️ Weather = Sentiment</div>
-              <div style={{ color: theme.textSecondary }}>
-                ☀️ Extreme Greed (75-100)<br/>
-                ⛈️ Extreme Fear (0-24)
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
       {/* Tab Navigation */}
-      <div style={{
-        display: 'flex',
-        justifyContent: 'center',
-        gap: 8,
-        padding: '12px 20px',
-        background: isDarkMode ? 'rgba(15,23,42,0.8)' : 'rgba(241,245,249,0.95)',
-        borderBottom: `1px solid ${theme.border}`,
-        position: 'relative',
-        zIndex: 10,
-      }}>
+      <div style={{ display: 'flex', justifyContent: 'center', gap: 8, padding: '12px 20px', background: isDarkMode ? 'rgba(15,23,42,0.8)' : 'rgba(241,245,249,0.95)', borderBottom: '1px solid ' + theme.border, position: 'relative', zIndex: 10 }}>
         {[
           { id: 'battle', label: '⚔️ Battle', desc: 'Live War' },
           { id: 'news', label: '📰 News', desc: 'Crypto Intel' },
@@ -678,18 +443,12 @@ export default function BTCBattle() {
         ].map(tab => (
           <button
             key={tab.id}
-            onClick={() => setActiveTab(tab.id as 'battle' | 'news' | 'farcaster')}
+            onClick={() => setActiveTab(tab.id as any)}
             style={{
-              flex: 1,
-              maxWidth: 140,
-              padding: '10px 16px',
+              flex: 1, maxWidth: 140, padding: '10px 16px',
               background: activeTab === tab.id ? 'rgba(250,204,21,0.15)' : (isDarkMode ? 'rgba(51,65,85,0.3)' : 'rgba(226,232,240,0.5)'),
-              border: activeTab === tab.id ? '1px solid rgba(250,204,21,0.5)' : `1px solid ${theme.border}`,
-              borderRadius: 10,
-              color: activeTab === tab.id ? '#facc15' : theme.textSecondary,
-              cursor: 'pointer',
-              transition: 'all 0.2s',
-              textAlign: 'center',
+              border: activeTab === tab.id ? '1px solid rgba(250,204,21,0.5)' : '1px solid ' + theme.border,
+              borderRadius: 10, color: activeTab === tab.id ? '#facc15' : theme.textSecondary, cursor: 'pointer', textAlign: 'center'
             }}
           >
             <div style={{ fontSize: 14, fontWeight: 'bold' }}>{tab.label}</div>
@@ -699,297 +458,151 @@ export default function BTCBattle() {
       </div>
 
       {/* Main Content */}
-      <main style={styles.main}>
+      <main style={{ position: 'relative', zIndex: 10, padding: '20px' }}>
         
-        {/* ===== BATTLE TAB ===== */}
+        {/* BATTLE TAB */}
         {activeTab === 'battle' && (
           <>
-        {/* Price Display */}
-        <div style={{ textAlign: 'center', marginBottom: 20 }}>
-          <div style={{
-            fontSize: 52,
-            fontWeight: 900,
-            fontFamily: "'Orbitron', sans-serif",
-            letterSpacing: 2,
-            transition: 'all 0.3s',
-            color: priceFlash === 'green' ? '#4ade80' : priceFlash === 'red' ? '#f87171' : 'white',
-            textShadow: priceFlash ? `0 0 30px ${priceFlash === 'green' ? 'rgba(74,222,128,0.5)' : 'rgba(248,113,113,0.5)'}` : 'none',
-          }}>
-            {formatPrice(price)}
-          </div>
-          <div style={{
-            fontSize: 18,
-            fontFamily: "'Share Tech Mono', monospace",
-            color: priceChange >= 0 ? '#4ade80' : '#f87171',
-          }}>
-            {priceChange >= 0 ? '▲' : '▼'} {Math.abs(priceChange).toFixed(2)}%
-            <span style={{ color: '#64748b', fontSize: 12, marginLeft: 4 }}>(24h)</span>
-          </div>
-        </div>
+            {/* Price Display */}
+            <div style={{ textAlign: 'center', marginBottom: 20 }}>
+              <div style={{ fontSize: 52, fontWeight: 900, fontFamily: "'Orbitron', sans-serif", letterSpacing: 2, color: priceFlash === 'green' ? '#4ade80' : priceFlash === 'red' ? '#f87171' : 'white' }}>
+                {formatPrice(price)}
+              </div>
+              <div style={{ fontSize: 18, fontFamily: "'Share Tech Mono', monospace", color: priceChange >= 0 ? '#4ade80' : '#f87171' }}>
+                {priceChange >= 0 ? '▲' : '▼'} {Math.abs(priceChange).toFixed(2)}%
+                <span style={{ color: '#64748b', fontSize: 12, marginLeft: 4 }}>(24h)</span>
+              </div>
+            </div>
 
-        {/* Tug of War */}
-        <div style={styles.card}>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.5fr 1fr', gap: 20, alignItems: 'center' }}>
-            
-            {/* Bull Side */}
+            {/* Tug of War */}
+            <div style={{ background: isDarkMode ? 'rgba(30,41,59,0.5)' : 'rgba(241,245,249,0.8)', borderRadius: 16, border: '1px solid ' + theme.border, padding: 20, marginBottom: 20 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.5fr 1fr', gap: 20, alignItems: 'center' }}>
+                {/* Bull Side */}
+                <div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
+                    <span style={{ fontSize: 36 }}>🐂</span>
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 2 }}>
+                      {Array(Math.min(Math.floor(bullPower), 8)).fill(0).map((_, i) => (<span key={i} style={{ fontSize: 16 }}>🐂</span>))}
+                    </div>
+                  </div>
+                  <div style={{ fontSize: 10, color: '#64748b', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 4 }}>Bull Power</div>
+                  <div style={{ height: 6, background: '#334155', borderRadius: 3, overflow: 'hidden' }}>
+                    <div style={{ height: '100%', width: Math.min(bullPower * 5, 100) + '%', background: 'linear-gradient(90deg, #16a34a, #4ade80)', borderRadius: 3 }} />
+                  </div>
+                  <div style={{ fontSize: 13, fontFamily: "'Share Tech Mono', monospace", color: '#4ade80', marginTop: 4 }}>{bullPower.toFixed(1)}</div>
+                </div>
+
+                {/* Rope */}
+                <div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 10, color: '#64748b', marginBottom: 8 }}>
+                    <span style={{ color: '#4ade80' }}>← BULL ZONE</span>
+                    <span>⚔️</span>
+                    <span style={{ color: '#f87171' }}>BEAR ZONE →</span>
+                  </div>
+                  <div style={{ position: 'relative', height: 16, background: 'linear-gradient(90deg, #22c55e, #facc15, #ef4444)', borderRadius: 8, boxShadow: '0 0 20px rgba(250,204,21,0.3)' }}>
+                    <div style={{ position: 'absolute', top: '50%', left: tugPosition + '%', transform: 'translate(-50%, -50%)', width: 48, height: 48, background: '#0f172a', border: '3px solid #facc15', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 0 20px rgba(250,204,21,0.5)', transition: 'left 0.5s' }}>
+                      <span style={{ fontSize: 9, fontFamily: "'Share Tech Mono', monospace", fontWeight: 'bold' }}>{formatPrice(price).slice(0, 6)}</span>
+                    </div>
+                  </div>
+                  <div style={{ textAlign: 'center', fontSize: 11, color: '#64748b', marginTop: 8 }}>
+                    {tugPosition < 40 ? '🐂 Bulls Dominating!' : tugPosition > 60 ? '🐻 Bears Dominating!' : '⚖️ Balanced Battle'}
+                  </div>
+                </div>
+
+                {/* Bear Side */}
+                <div style={{ textAlign: 'right' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 10, marginBottom: 12 }}>
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 2, justifyContent: 'flex-end' }}>
+                      {Array(Math.min(Math.floor(bearPower), 8)).fill(0).map((_, i) => (<span key={i} style={{ fontSize: 16 }}>🐻</span>))}
+                    </div>
+                    <span style={{ fontSize: 36 }}>🐻</span>
+                  </div>
+                  <div style={{ fontSize: 10, color: '#64748b', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 4 }}>Bear Power</div>
+                  <div style={{ height: 6, background: '#334155', borderRadius: 3, overflow: 'hidden' }}>
+                    <div style={{ height: '100%', width: Math.min(bearPower * 5, 100) + '%', background: 'linear-gradient(90deg, #f87171, #dc2626)', borderRadius: 3, marginLeft: 'auto' }} />
+                  </div>
+                  <div style={{ fontSize: 13, fontFamily: "'Share Tech Mono', monospace", color: '#f87171', marginTop: 4 }}>{bearPower.toFixed(1)}</div>
+                </div>
+              </div>
+            </div>
+
+            {/* Whale Alerts */}
             <div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
-                <span style={{ fontSize: 36 }}>🐂</span>
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 2 }}>
-                  {Array(Math.min(Math.floor(bullPower), 8)).fill(0).map((_, i) => (
-                    <span key={i} style={{ fontSize: 16 }}>🐂</span>
-                  ))}
-                </div>
-              </div>
-              <div style={{ fontSize: 10, color: '#64748b', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 4 }}>
-                Bull Power
-              </div>
-              <div style={{ height: 6, background: '#334155', borderRadius: 3, overflow: 'hidden' }}>
-                <div style={{
-                  height: '100%',
-                  width: `${Math.min(bullPower * 5, 100)}%`,
-                  background: 'linear-gradient(90deg, #16a34a, #4ade80)',
-                  borderRadius: 3,
-                  transition: 'width 0.5s',
-                }} />
-              </div>
-              <div style={{ fontSize: 13, fontFamily: "'Share Tech Mono', monospace", color: '#4ade80', marginTop: 4 }}>
-                {bullPower.toFixed(1)}
+              <h3 style={{ fontSize: 12, fontWeight: 'bold', color: '#64748b', textTransform: 'uppercase', letterSpacing: 2, marginBottom: 12 }}>
+                🐋 Whale Movements <span style={{ fontWeight: 'normal', fontSize: 10 }}>(100+ BTC)</span>
+              </h3>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 8 }}>
+                {whaleAlerts.slice(0, 6).map((alert) => (
+                  <div key={alert.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: 12, background: alert.type === 'buy' ? 'rgba(34,197,94,0.1)' : 'rgba(239,68,68,0.1)', borderRadius: 8, borderLeft: '3px solid ' + (alert.type === 'buy' ? '#4ade80' : '#f87171') }}>
+                    <span>{alert.type === 'buy' ? '🟢' : '🔴'}</span>
+                    <span style={{ fontFamily: "'Share Tech Mono', monospace", fontWeight: 'bold' }}>{alert.amount} BTC</span>
+                    <span style={{ color: '#64748b', fontFamily: "'Share Tech Mono', monospace" }}>${alert.usdValue}M</span>
+                    <span style={{ fontSize: 11, color: '#64748b', flex: 1 }}>{alert.exchange}</span>
+                    <span style={{ fontSize: 10, fontWeight: 'bold', padding: '2px 8px', borderRadius: 4, background: alert.type === 'buy' ? '#4ade80' : '#f87171', color: alert.type === 'buy' ? '#000' : '#fff' }}>{alert.type.toUpperCase()}</span>
+                  </div>
+                ))}
               </div>
             </div>
-
-            {/* Rope */}
-            <div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 10, color: '#64748b', marginBottom: 8 }}>
-                <span style={{ color: '#4ade80' }}>← BULL ZONE</span>
-                <span>⚔️</span>
-                <span style={{ color: '#f87171' }}>BEAR ZONE →</span>
-              </div>
-              <div style={{
-                position: 'relative',
-                height: 16,
-                background: 'linear-gradient(90deg, #22c55e, #facc15, #ef4444)',
-                borderRadius: 8,
-                boxShadow: '0 0 20px rgba(250,204,21,0.3)',
-              }}>
-                <div style={{
-                  position: 'absolute',
-                  top: '50%',
-                  left: `${tugPosition}%`,
-                  transform: 'translate(-50%, -50%)',
-                  width: 48,
-                  height: 48,
-                  background: '#0f172a',
-                  border: '3px solid #facc15',
-                  borderRadius: '50%',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  boxShadow: '0 0 20px rgba(250,204,21,0.5)',
-                  transition: 'left 0.5s',
-                }}>
-                  <span style={{ fontSize: 9, fontFamily: "'Share Tech Mono', monospace", fontWeight: 'bold' }}>
-                    {formatPrice(price).slice(0, 6)}
-                  </span>
-                </div>
-              </div>
-              <div style={{ display: 'flex', height: 3, borderRadius: 2, overflow: 'hidden', marginTop: 8 }}>
-                <div style={{ background: '#4ade80', width: `${100 - tugPosition}%`, transition: 'width 0.5s' }} />
-                <div style={{ background: '#f87171', width: `${tugPosition}%`, transition: 'width 0.5s' }} />
-              </div>
-              <div style={{ textAlign: 'center', fontSize: 11, color: '#64748b', marginTop: 8 }}>
-                {tugPosition < 40 ? '🐂 Bulls Dominating!' : tugPosition > 60 ? '🐻 Bears Dominating!' : '⚖️ Balanced Battle'}
-              </div>
-            </div>
-
-            {/* Bear Side */}
-            <div style={{ textAlign: 'right' }}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 10, marginBottom: 12 }}>
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 2, justifyContent: 'flex-end' }}>
-                  {Array(Math.min(Math.floor(bearPower), 8)).fill(0).map((_, i) => (
-                    <span key={i} style={{ fontSize: 16 }}>🐻</span>
-                  ))}
-                </div>
-                <span style={{ fontSize: 36 }}>🐻</span>
-              </div>
-              <div style={{ fontSize: 10, color: '#64748b', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 4 }}>
-                Bear Power
-              </div>
-              <div style={{ height: 6, background: '#334155', borderRadius: 3, overflow: 'hidden' }}>
-                <div style={{
-                  height: '100%',
-                  width: `${Math.min(bearPower * 5, 100)}%`,
-                  background: 'linear-gradient(90deg, #f87171, #dc2626)',
-                  borderRadius: 3,
-                  marginLeft: 'auto',
-                  transition: 'width 0.5s',
-                }} />
-              </div>
-              <div style={{ fontSize: 13, fontFamily: "'Share Tech Mono', monospace", color: '#f87171', marginTop: 4 }}>
-                {bearPower.toFixed(1)}
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Whale Alerts */}
-        <div>
-          <h3 style={{ fontSize: 12, fontWeight: 'bold', color: '#64748b', textTransform: 'uppercase', letterSpacing: 2, marginBottom: 12 }}>
-            🐋 Whale Movements <span style={{ fontWeight: 'normal', fontSize: 10 }}>(100+ BTC)</span>
-          </h3>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 8 }}>
-            {whaleAlerts.slice(0, 6).map((alert) => (
-              <div 
-                key={alert.id}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 10,
-                  padding: 12,
-                  background: alert.type === 'buy' ? 'rgba(34,197,94,0.1)' : 'rgba(239,68,68,0.1)',
-                  borderRadius: 8,
-                  borderLeft: `3px solid ${alert.type === 'buy' ? '#4ade80' : '#f87171'}`,
-                }}
-              >
-                <span>{alert.type === 'buy' ? '🟢' : '🔴'}</span>
-                <span style={{ fontFamily: "'Share Tech Mono', monospace", fontWeight: 'bold' }}>{alert.amount} BTC</span>
-                <span style={{ color: '#64748b', fontFamily: "'Share Tech Mono', monospace" }}>${alert.usdValue}M</span>
-                <span style={{ fontSize: 11, color: '#64748b', flex: 1 }}>{alert.exchange}</span>
-                <span style={{
-                  fontSize: 10,
-                  fontWeight: 'bold',
-                  padding: '2px 8px',
-                  borderRadius: 4,
-                  background: alert.type === 'buy' ? '#4ade80' : '#f87171',
-                  color: alert.type === 'buy' ? '#000' : '#fff',
-                }}>
-                  {alert.type.toUpperCase()}
-                </span>
-              </div>
-            ))}
-          </div>
-        </div>
           </>
         )}
 
-        {/* ===== NEWS TAB ===== */}
+        {/* NEWS TAB */}
         {activeTab === 'news' && (
           <div>
-            <div style={{ 
-              display: 'flex', 
-              alignItems: 'center', 
-              justifyContent: 'space-between',
-              marginBottom: 16 
-            }}>
-              <h2 style={{ 
-                fontSize: 16, 
-                fontWeight: 'bold', 
-                margin: 0,
-                display: 'flex',
-                alignItems: 'center',
-                gap: 8
-              }}>
-                📰 Crypto News Feed
-              </h2>
-              <span style={{ fontSize: 10, color: theme.textMuted }}>
-                Powered by CryptoPanic
-              </span>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
+              <h2 style={{ fontSize: 16, fontWeight: 'bold', margin: 0 }}>📰 Crypto News Feed</h2>
+              <span style={{ fontSize: 10, color: theme.textMuted }}>Tap to read full article ↗</span>
             </div>
             
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
               {newsItems.length === 0 ? (
-                <div style={{ textAlign: 'center', padding: 40, color: theme.textMuted }}>
-                  Loading news...
-                </div>
+                <div style={{ textAlign: 'center', padding: 40, color: theme.textMuted }}>Loading news...</div>
               ) : (
                 newsItems.map((item) => (
-                  <a
+                  <div
                     key={item.id}
-                    href={item.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
+                    onClick={() => openUrl(item.url)}
                     style={{
-                      display: 'block',
-                      padding: 14,
-                      background: theme.bgSecondary,
-                      borderRadius: 10,
-                      border: `1px solid ${theme.border}`,
-                      borderLeft: `3px solid ${
-                        item.sentiment === 'bullish' ? '#4ade80' : 
-                        item.sentiment === 'bearish' ? '#f87171' : theme.textMuted
-                      }`,
-                      textDecoration: 'none',
-                      color: 'inherit',
-                      transition: 'all 0.2s',
+                      display: 'block', padding: 14, background: theme.bgSecondary, borderRadius: 10,
+                      border: '1px solid ' + theme.border,
+                      borderLeft: '3px solid ' + (item.sentiment === 'bullish' ? '#4ade80' : item.sentiment === 'bearish' ? '#f87171' : theme.textMuted),
+                      cursor: 'pointer'
                     }}
                   >
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12 }}>
                       <div style={{ flex: 1 }}>
-                        <div style={{ fontSize: 14, fontWeight: 500, marginBottom: 6, lineHeight: 1.4 }}>
-                          {item.title}
-                        </div>
+                        <div style={{ fontSize: 14, fontWeight: 500, marginBottom: 6, lineHeight: 1.4, color: theme.text }}>{item.title}</div>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 11, color: theme.textMuted }}>
                           <span>{item.source}</span>
                           <span>•</span>
                           <span>{formatTimeAgo(item.timestamp)}</span>
+                          <span>•</span>
+                          <span style={{ color: '#3b82f6' }}>↗ Read</span>
                         </div>
                       </div>
-                      <span style={{
-                        fontSize: 9,
-                        fontWeight: 'bold',
-                        padding: '3px 8px',
-                        borderRadius: 4,
-                        textTransform: 'uppercase',
-                        background: item.sentiment === 'bullish' ? 'rgba(74,222,128,0.2)' : 
-                                   item.sentiment === 'bearish' ? 'rgba(248,113,113,0.2)' : 'rgba(100,116,139,0.2)',
-                        color: item.sentiment === 'bullish' ? '#4ade80' : 
-                               item.sentiment === 'bearish' ? '#f87171' : '#94a3b8',
-                      }}>
+                      <span style={{ fontSize: 9, fontWeight: 'bold', padding: '3px 8px', borderRadius: 4, textTransform: 'uppercase', background: item.sentiment === 'bullish' ? 'rgba(74,222,128,0.2)' : item.sentiment === 'bearish' ? 'rgba(248,113,113,0.2)' : 'rgba(100,116,139,0.2)', color: item.sentiment === 'bullish' ? '#4ade80' : item.sentiment === 'bearish' ? '#f87171' : '#94a3b8' }}>
                         {item.sentiment}
                       </span>
                     </div>
-                  </a>
+                  </div>
                 ))
               )}
+            </div>
+            <div style={{ marginTop: 16, padding: 12, background: theme.bgSecondary, borderRadius: 10, border: '1px solid ' + theme.border, textAlign: 'center' }}>
+              <span style={{ fontSize: 11, color: theme.textMuted }}>📡 News powered by CryptoPanic • Tap any article to read the full story</span>
             </div>
           </div>
         )}
 
-        {/* ===== FARCASTER TAB ===== */}
+        {/* FARCASTER TAB */}
         {activeTab === 'farcaster' && (
           <div>
-            <div style={{ 
-              display: 'flex', 
-              alignItems: 'center', 
-              justifyContent: 'space-between',
-              marginBottom: 16 
-            }}>
-              <h2 style={{ 
-                fontSize: 16, 
-                fontWeight: 'bold', 
-                margin: 0,
-                display: 'flex',
-                alignItems: 'center',
-                gap: 8
-              }}>
-                🟣 Farcaster Feed
-              </h2>
-              <span style={{ fontSize: 10, color: theme.textMuted }}>
-                Crypto & Base Community
-              </span>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
+              <h2 style={{ fontSize: 16, fontWeight: 'bold', margin: 0 }}>🟣 Farcaster Feed</h2>
+              <span style={{ fontSize: 10, color: theme.textMuted }}>Crypto & Base Community</span>
             </div>
 
-            {/* Farcaster Branding Banner */}
-            <div style={{
-              padding: 12,
-              marginBottom: 16,
-              background: 'linear-gradient(135deg, rgba(138,99,210,0.2), rgba(99,102,241,0.2))',
-              borderRadius: 10,
-              border: '1px solid rgba(138,99,210,0.3)',
-              display: 'flex',
-              alignItems: 'center',
-              gap: 10,
-            }}>
+            <div style={{ padding: 12, marginBottom: 16, background: 'linear-gradient(135deg, rgba(138,99,210,0.2), rgba(99,102,241,0.2))', borderRadius: 10, border: '1px solid rgba(138,99,210,0.3)', display: 'flex', alignItems: 'center', gap: 10 }}>
               <span style={{ fontSize: 24 }}>🔵</span>
               <div>
                 <div style={{ fontSize: 12, fontWeight: 'bold', color: '#a78bfa' }}>Built on Base</div>
@@ -998,99 +611,36 @@ export default function BTCBattle() {
             </div>
             
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-              {farcasterCasts.length === 0 ? (
-                <div style={{ textAlign: 'center', padding: 40, color: theme.textMuted }}>
-                  Loading casts...
-                </div>
-              ) : (
-                farcasterCasts.map((cast) => (
-                  <div
-                    key={cast.id}
-                    style={{
-                      padding: 14,
-                      background: theme.bgSecondary,
-                      borderRadius: 12,
-                      border: `1px solid ${theme.border}`,
-                    }}
-                  >
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
-                      {cast.authorPfp && cast.authorPfp.startsWith('http') ? (
-                        <img 
-                          src={cast.authorPfp} 
-                          alt={cast.author}
-                          style={{
-                            width: 36,
-                            height: 36,
-                            borderRadius: '50%',
-                            objectFit: 'cover',
-                          }}
-                          onError={(e) => {
-                            (e.target as HTMLImageElement).style.display = 'none';
-                          }}
-                        />
-                      ) : (
-                        <div style={{
-                          width: 36,
-                          height: 36,
-                          borderRadius: '50%',
-                          background: 'linear-gradient(135deg, #8b5cf6, #6366f1)',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          fontSize: 18,
-                        }}>
-                          {cast.authorPfp || cast.author.charAt(0).toUpperCase()}
-                        </div>
-                      )}
-                      <div style={{ flex: 1 }}>
-                        <div style={{ fontSize: 13, fontWeight: 'bold', color: theme.text }}>
-                          @{cast.author}
-                        </div>
-                        <div style={{ fontSize: 10, color: theme.textMuted }}>
-                          {formatTimeAgo(cast.timestamp)} • /{cast.channel}
-                        </div>
-                      </div>
+              {farcasterCasts.map((cast) => (
+                <div key={cast.id} style={{ padding: 14, background: theme.bgSecondary, borderRadius: 12, border: '1px solid ' + theme.border }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
+                    <div style={{ width: 36, height: 36, borderRadius: '50%', background: 'linear-gradient(135deg, #8b5cf6, #6366f1)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18 }}>
+                      {cast.authorPfp || cast.author.charAt(0).toUpperCase()}
                     </div>
-                    <div style={{ fontSize: 14, lineHeight: 1.6, color: theme.text, marginBottom: 10, opacity: 0.95 }}>
-                      {cast.text}
-                    </div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 16, fontSize: 12, color: theme.textMuted }}>
-                      <span>❤️ {cast.likes}</span>
-                      <span style={{ 
-                        padding: '2px 8px', 
-                        background: 'rgba(139,92,246,0.2)', 
-                        borderRadius: 4,
-                        color: '#a78bfa',
-                        fontSize: 10,
-                      }}>
-                        /{cast.channel}
-                      </span>
+                    <div style={{ flex: 1 }}>
+                      <div style={{ fontSize: 13, fontWeight: 'bold', color: theme.text }}>@{cast.author}</div>
+                      <div style={{ fontSize: 10, color: theme.textMuted }}>{formatTimeAgo(cast.timestamp)} • /{cast.channel}</div>
                     </div>
                   </div>
-                ))
-              )}
+                  <div style={{ fontSize: 14, lineHeight: 1.6, color: theme.text, marginBottom: 10, opacity: 0.95 }}>{cast.text}</div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 16, fontSize: 12, color: theme.textMuted }}>
+                    <span>❤️ {cast.likes}</span>
+                    <span style={{ padding: '2px 8px', background: 'rgba(139,92,246,0.2)', borderRadius: 4, color: '#a78bfa', fontSize: 10 }}>/{cast.channel}</span>
+                  </div>
+                </div>
+              ))}
             </div>
 
-            {/* CTA to join Farcaster */}
-            <div style={{
-              marginTop: 20,
-              padding: 16,
-              background: 'rgba(99,102,241,0.1)',
-              borderRadius: 12,
-              border: '1px solid rgba(99,102,241,0.3)',
-              textAlign: 'center',
-            }}>
+            <div style={{ marginTop: 20, padding: 16, background: 'rgba(99,102,241,0.1)', borderRadius: 12, border: '1px solid rgba(99,102,241,0.3)', textAlign: 'center' }}>
               <div style={{ fontSize: 13, fontWeight: 'bold', marginBottom: 4 }}>Join the conversation</div>
-              <div style={{ fontSize: 11, color: theme.textSecondary }}>
-                Follow @btcbattle on Warpcast for real-time updates
-              </div>
+              <div style={{ fontSize: 11, color: theme.textSecondary }}>Follow @freakid on Warpcast for updates</div>
             </div>
           </div>
         )}
       </main>
 
       {/* Stats Footer */}
-      <footer style={styles.footer}>
+      <footer style={{ position: 'relative', zIndex: 10, display: 'flex', justifyContent: 'center', gap: 24, padding: '16px 20px', borderTop: '1px solid ' + theme.border, background: isDarkMode ? 'rgba(10,10,15,0.95)' : 'rgba(255,255,255,0.95)', flexWrap: 'wrap' }}>
         <Tooltip statKey="BTC.D" isDark={isDarkMode}>
           <div style={{ textAlign: 'center' }}>
             <div style={{ fontSize: 9, color: theme.textMuted, textTransform: 'uppercase', letterSpacing: 1 }}>BTC.D</div>
@@ -1106,84 +656,32 @@ export default function BTCBattle() {
         <Tooltip statKey="RSI" isDark={isDarkMode}>
           <div style={{ textAlign: 'center' }}>
             <div style={{ fontSize: 9, color: theme.textMuted, textTransform: 'uppercase', letterSpacing: 1 }}>RSI</div>
-            <div style={{ fontFamily: "'Share Tech Mono', monospace", fontWeight: 'bold', color: rsi > 70 ? '#f87171' : rsi < 30 ? '#4ade80' : theme.text }}>
-              {rsi.toFixed(0)}
-            </div>
-          </div>
-        </Tooltip>
-        <Tooltip statKey="VOL" isDark={isDarkMode}>
-          <div style={{ textAlign: 'center' }}>
-            <div style={{ fontSize: 9, color: theme.textMuted, textTransform: 'uppercase', letterSpacing: 1 }}>24H VOL</div>
-            <div style={{ fontFamily: "'Share Tech Mono', monospace", fontWeight: 'bold' }}>$42.5B</div>
-          </div>
-        </Tooltip>
-        <Tooltip statKey="L/S" isDark={isDarkMode}>
-          <div style={{ textAlign: 'center' }}>
-            <div style={{ fontSize: 9, color: theme.textMuted, textTransform: 'uppercase', letterSpacing: 1 }}>L/S</div>
-            <div style={{ fontFamily: "'Share Tech Mono', monospace", fontWeight: 'bold', color: longShortRatio > 1 ? '#4ade80' : '#f87171' }}>
-              {longShortRatio.toFixed(2)}
-            </div>
+            <div style={{ fontFamily: "'Share Tech Mono', monospace", fontWeight: 'bold', color: rsi > 70 ? '#f87171' : rsi < 30 ? '#4ade80' : theme.text }}>{rsi.toFixed(0)}</div>
           </div>
         </Tooltip>
         <Tooltip statKey="F&G" isDark={isDarkMode}>
           <div style={{ textAlign: 'center' }}>
             <div style={{ fontSize: 9, color: theme.textMuted, textTransform: 'uppercase', letterSpacing: 1 }}>F&G</div>
-            <div style={{ fontFamily: "'Share Tech Mono', monospace", fontWeight: 'bold', color: fearGreed.value >= 75 ? '#f87171' : fearGreed.value <= 25 ? '#4ade80' : '#facc15' }}>
-              {fearGreed.value}
-            </div>
+            <div style={{ fontFamily: "'Share Tech Mono', monospace", fontWeight: 'bold', color: fearGreed.value >= 75 ? '#f87171' : fearGreed.value <= 25 ? '#4ade80' : '#facc15' }}>{fearGreed.value}</div>
           </div>
         </Tooltip>
       </footer>
 
       {/* Tip Wallet */}
-      <div style={{ 
-        textAlign: 'center', 
-        padding: '16px 20px', 
-        background: isDarkMode ? 'rgba(250,204,21,0.05)' : 'rgba(250,204,21,0.1)',
-        borderTop: '1px solid rgba(250,204,21,0.2)',
-        position: 'relative', 
-        zIndex: 10 
-      }}>
-        <div style={{ fontSize: 12, color: '#facc15', marginBottom: 6, fontWeight: 'bold' }}>
-          ☕ Support BTC Battle
-        </div>
-        <div 
-          onClick={() => {
-            navigator.clipboard.writeText('0x8E48bCE9B40C7E0c13b200AEad4A357e6cA2de19');
-            alert('Wallet address copied!');
-          }}
-          style={{ 
-            fontSize: 11, 
-            color: theme.textSecondary, 
-            fontFamily: "'Share Tech Mono', monospace",
-            cursor: 'pointer',
-            padding: '8px 16px',
-            background: theme.bgSecondary,
-            borderRadius: 8,
-            border: `1px solid ${theme.border}`,
-            display: 'inline-block',
-            transition: 'all 0.2s',
-          }}
-        >
+      <div style={{ textAlign: 'center', padding: '16px 20px', background: isDarkMode ? 'rgba(250,204,21,0.05)' : 'rgba(250,204,21,0.1)', borderTop: '1px solid rgba(250,204,21,0.2)', position: 'relative', zIndex: 10 }}>
+        <div style={{ fontSize: 12, color: '#facc15', marginBottom: 6, fontWeight: 'bold' }}>☕ Support BTC Battle</div>
+        <div onClick={() => { navigator.clipboard.writeText('0x8E48bCE9B40C7E0c13b200AEad4A357e6cA2de19'); alert('Wallet address copied!'); }} style={{ fontSize: 11, color: theme.textSecondary, fontFamily: "'Share Tech Mono', monospace", cursor: 'pointer', padding: '8px 16px', background: theme.bgSecondary, borderRadius: 8, border: '1px solid ' + theme.border, display: 'inline-block' }}>
           0x8E48bCE9B40C7E0c13b200AEad4A357e6cA2de19
           <span style={{ marginLeft: 8, fontSize: 10, color: theme.textMuted }}>📋 Click to copy</span>
         </div>
-        <div style={{ fontSize: 9, color: theme.textMuted, marginTop: 6 }}>
-          ETH • USDC • Any token on Base 💙
-        </div>
+        <div style={{ fontSize: 9, color: theme.textMuted, marginTop: 6 }}>ETH • USDC • Any token on Base 💙</div>
       </div>
 
-      {/* Credits */}
       <div style={{ textAlign: 'center', padding: 8, fontSize: 10, color: theme.textMuted, position: 'relative', zIndex: 10 }}>
         Data: CoinGecko • Fear & Greed: Alternative.me • Built by QuantumShieldLabs
       </div>
 
-      <style>{`
-        @keyframes pulse {
-          0%, 100% { opacity: 1; }
-          50% { opacity: 0.5; }
-        }
-      `}</style>
+      <style>{`@keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }`}</style>
     </div>
   );
 }

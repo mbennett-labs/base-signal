@@ -20,7 +20,7 @@ export const minikitConfig = {
     version: "1",
     name: "BTC Battle",
     subtitle: "Real-Time Whale War",
-    description: "Watch bulls and bears fight in real-time! Track whale movements, market sentiment, and see who's winning the battle for Bitcoin. Live tug-of-war visualization powered by on-chain data.",
+    description: "Watch bulls and bears fight in real-time! Track whale movements, sentiment, and see who's winning the Bitcoin battle.",
     screenshotUrls: [
       `${ROOT_URL}/screenshot-1.png`,
       `${ROOT_URL}/screenshot-2-news.png`,
@@ -32,10 +32,10 @@ export const minikitConfig = {
     homeUrl: ROOT_URL,
     webhookUrl: `${ROOT_URL}/api/webhook`,
     primaryCategory: "finance",
-    tags: ["trading", "bitcoin", "whales", "analytics", "defi", "real-time"],
+    tags: ["trading", "bitcoin", "whales", "analytics", "defi"],
     heroImageUrl: `${ROOT_URL}/og.png`,
     tagline: "Who's winning? Bulls or Bears?",
-    ogTitle: "BTC Battle - Real-Time Whale War",
+    ogTitle: "BTC Battle - Whale War",
     ogDescription: "Watch bulls and bears fight for Bitcoin dominance",
     ogImageUrl: `${ROOT_URL}/og.png`,
     noindex: false

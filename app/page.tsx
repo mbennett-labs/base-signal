@@ -246,16 +246,25 @@ export default function BTCBattle() {
     }
   }, []);
 
-  // Open URL using Farcaster SDK
-  const openUrl = useCallback((url: string) => {
+ // Open URL using Farcaster SDK (works properly in Mini App context)
+  const openUrl = useCallback(async (url: string) => {
     if (!url || url === '#') return;
+    
     try {
-      sdk.actions.openUrl(url);
+      // Check if we're in a Mini App context
+      const context = await sdk.context;
+      if (context) {
+        // We're in Mini App - use SDK
+        sdk.actions.openUrl(url);
+      } else {
+        // Not in Mini App - use window.open
+        window.open(url, '_blank', 'noopener,noreferrer');
+      }
     } catch (e) {
+      // Fallback
       window.open(url, '_blank', 'noopener,noreferrer');
     }
   }, []);
-
   const fetchFarcaster = useCallback(async () => {
     try {
       const fids = [3, 5650, 99];

@@ -133,8 +133,15 @@ export default function BTCBattle() {
   const [showLegend, setShowLegend] = useState(false);
   const [newsItems, setNewsItems] = useState<NewsItem[]>([]);
   const [farcasterCasts, setFarcasterCasts] = useState<FarcasterCast[]>([]);
-  const [activeTab, setActiveTab] = useState<'battle' | 'news' | 'farcaster'>('battle');
+  const [activeTab, setActiveTab] = useState<'battle' | 'news' | 'farcaster' | 'ta'>('battle');
   const [isDarkMode, setIsDarkMode] = useState(true);
+  
+  // TA Summary state
+  const [taTimeframe, setTaTimeframe] = useState<'4h' | 'daily' | 'weekly'>('daily');
+  const [taSummary, setTaSummary] = useState<string>('');
+  const [taLoading, setTaLoading] = useState(false);
+  const [taError, setTaError] = useState<string>('');
+  const [taLastGenerated, setTaLastGenerated] = useState<Date | null>(null);
 
   // Initialize Farcaster SDK
   useEffect(() => {
@@ -272,6 +279,46 @@ export default function BTCBattle() {
     ]);
   }, []);
 
+  // Fetch TA Summary from API
+  const fetchTASummary = useCallback(async (timeframe: '4h' | 'daily' | 'weekly') => {
+    setTaLoading(true);
+    setTaError('');
+    
+    try {
+      const response = await fetch('/api/ta-summary', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          timeframe,
+          marketData: {
+            price,
+            priceChange,
+            rsi,
+            fearGreed,
+            btcDominance,
+            usdtDominance,
+            longShortRatio,
+          },
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to generate summary');
+      }
+
+      const data = await response.json();
+      setTaSummary(data.summary);
+      setTaLastGenerated(new Date());
+    } catch (error) {
+      console.error('TA Summary error:', error);
+      setTaError('Failed to generate summary. Please try again.');
+    } finally {
+      setTaLoading(false);
+    }
+  }, [price, priceChange, rsi, fearGreed, btcDominance, usdtDominance, longShortRatio]);
+
   const calculateBattle = useCallback(() => {
     let bull = 0, bear = 0;
     if (priceChange > 0) bull += Math.min(priceChange * 2, 10);
@@ -393,24 +440,25 @@ export default function BTCBattle() {
       </header>
 
       {/* Tab Navigation */}
-      <div style={{ display: 'flex', justifyContent: 'center', gap: 8, padding: '12px 20px', background: isDarkMode ? 'rgba(15,23,42,0.8)' : 'rgba(241,245,249,0.95)', borderBottom: '1px solid ' + theme.border, position: 'relative', zIndex: 10 }}>
+      <div style={{ display: 'flex', justifyContent: 'center', gap: 6, padding: '12px 16px', background: isDarkMode ? 'rgba(15,23,42,0.8)' : 'rgba(241,245,249,0.95)', borderBottom: '1px solid ' + theme.border, position: 'relative', zIndex: 10 }}>
         {[
           { id: 'battle', label: '⚔️ Battle', desc: 'Live War' },
           { id: 'news', label: '📰 News', desc: 'Crypto Intel' },
-          { id: 'farcaster', label: '🟣 Farcaster', desc: 'Social' },
+          { id: 'farcaster', label: '🟣 Social', desc: 'Farcaster' },
+          { id: 'ta', label: '📈 TA', desc: 'Analysis' },
         ].map(tab => (
           <button
             key={tab.id}
             onClick={() => setActiveTab(tab.id as any)}
             style={{
-              flex: 1, maxWidth: 140, padding: '10px 16px',
+              flex: 1, maxWidth: 100, padding: '8px 12px',
               background: activeTab === tab.id ? 'rgba(250,204,21,0.15)' : (isDarkMode ? 'rgba(51,65,85,0.3)' : 'rgba(226,232,240,0.5)'),
               border: activeTab === tab.id ? '1px solid rgba(250,204,21,0.5)' : '1px solid ' + theme.border,
               borderRadius: 10, color: activeTab === tab.id ? '#facc15' : theme.textSecondary, cursor: 'pointer', textAlign: 'center'
             }}
           >
-            <div style={{ fontSize: 14, fontWeight: 'bold' }}>{tab.label}</div>
-            <div style={{ fontSize: 9, opacity: 0.7 }}>{tab.desc}</div>
+            <div style={{ fontSize: 13, fontWeight: 'bold' }}>{tab.label}</div>
+            <div style={{ fontSize: 8, opacity: 0.7 }}>{tab.desc}</div>
           </button>
         ))}
       </div>
@@ -595,6 +643,162 @@ export default function BTCBattle() {
             </div>
           </div>
         )}
+
+        {/* TA SUMMARY TAB */}
+        {activeTab === 'ta' && (
+          <div>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
+              <h2 style={{ fontSize: 16, fontWeight: 'bold', margin: 0 }}>📈 Technical Analysis</h2>
+              <span style={{ fontSize: 10, color: theme.textMuted }}>AI-Powered Insights</span>
+            </div>
+
+            {/* Timeframe Selector */}
+            <div style={{ display: 'flex', gap: 8, marginBottom: 20 }}>
+              {[
+                { id: '4h', label: '4H', desc: 'Short-term' },
+                { id: 'daily', label: 'Daily', desc: 'Swing' },
+                { id: 'weekly', label: 'Weekly', desc: 'Macro' },
+              ].map(tf => (
+                <button
+                  key={tf.id}
+                  onClick={() => {
+                    setTaTimeframe(tf.id as any);
+                    setTaSummary('');
+                    setTaError('');
+                  }}
+                  style={{
+                    flex: 1,
+                    padding: '12px 16px',
+                    background: taTimeframe === tf.id ? 'rgba(250,204,21,0.15)' : theme.bgSecondary,
+                    border: taTimeframe === tf.id ? '2px solid #facc15' : '1px solid ' + theme.border,
+                    borderRadius: 12,
+                    cursor: 'pointer',
+                    textAlign: 'center',
+                  }}
+                >
+                  <div style={{ fontSize: 16, fontWeight: 'bold', color: taTimeframe === tf.id ? '#facc15' : theme.text }}>{tf.label}</div>
+                  <div style={{ fontSize: 10, color: theme.textMuted }}>{tf.desc}</div>
+                </button>
+              ))}
+            </div>
+
+            {/* Generate Button */}
+            <button
+              onClick={() => fetchTASummary(taTimeframe)}
+              disabled={taLoading}
+              style={{
+                width: '100%',
+                padding: '16px 24px',
+                background: taLoading ? '#334155' : 'linear-gradient(135deg, #facc15, #f59e0b)',
+                border: 'none',
+                borderRadius: 12,
+                cursor: taLoading ? 'not-allowed' : 'pointer',
+                marginBottom: 20,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: 10,
+              }}
+            >
+              {taLoading ? (
+                <>
+                  <span style={{ fontSize: 18 }}>⏳</span>
+                  <span style={{ fontSize: 14, fontWeight: 'bold', color: '#94a3b8' }}>Generating Analysis...</span>
+                </>
+              ) : (
+                <>
+                  <span style={{ fontSize: 18 }}>🤖</span>
+                  <span style={{ fontSize: 14, fontWeight: 'bold', color: '#0f172a' }}>Generate {taTimeframe.toUpperCase()} Analysis</span>
+                </>
+              )}
+            </button>
+
+            {/* Current Market Data */}
+            <div style={{ background: theme.bgSecondary, borderRadius: 12, border: '1px solid ' + theme.border, padding: 16, marginBottom: 20 }}>
+              <div style={{ fontSize: 11, fontWeight: 'bold', color: theme.textMuted, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 12 }}>Current Market Data</div>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12 }}>
+                <div style={{ textAlign: 'center' }}>
+                  <div style={{ fontSize: 10, color: theme.textMuted }}>Price</div>
+                  <div style={{ fontSize: 14, fontWeight: 'bold', color: theme.text }}>{formatPrice(price)}</div>
+                </div>
+                <div style={{ textAlign: 'center' }}>
+                  <div style={{ fontSize: 10, color: theme.textMuted }}>24h Change</div>
+                  <div style={{ fontSize: 14, fontWeight: 'bold', color: priceChange >= 0 ? '#4ade80' : '#f87171' }}>{priceChange >= 0 ? '+' : ''}{priceChange.toFixed(2)}%</div>
+                </div>
+                <div style={{ textAlign: 'center' }}>
+                  <div style={{ fontSize: 10, color: theme.textMuted }}>RSI</div>
+                  <div style={{ fontSize: 14, fontWeight: 'bold', color: rsi > 70 ? '#f87171' : rsi < 30 ? '#4ade80' : theme.text }}>{rsi.toFixed(0)}</div>
+                </div>
+                <div style={{ textAlign: 'center' }}>
+                  <div style={{ fontSize: 10, color: theme.textMuted }}>Fear & Greed</div>
+                  <div style={{ fontSize: 14, fontWeight: 'bold', color: '#facc15' }}>{fearGreed.value}</div>
+                </div>
+                <div style={{ textAlign: 'center' }}>
+                  <div style={{ fontSize: 10, color: theme.textMuted }}>BTC.D</div>
+                  <div style={{ fontSize: 14, fontWeight: 'bold', color: theme.text }}>{btcDominance}%</div>
+                </div>
+                <div style={{ textAlign: 'center' }}>
+                  <div style={{ fontSize: 10, color: theme.textMuted }}>USDT.D</div>
+                  <div style={{ fontSize: 14, fontWeight: 'bold', color: theme.text }}>{usdtDominance}%</div>
+                </div>
+              </div>
+            </div>
+
+            {/* Error Message */}
+            {taError && (
+              <div style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)', borderRadius: 12, padding: 16, marginBottom: 20 }}>
+                <div style={{ color: '#f87171', fontSize: 14 }}>⚠️ {taError}</div>
+              </div>
+            )}
+
+            {/* Summary Display */}
+            {taSummary && (
+              <div style={{ background: theme.bgSecondary, borderRadius: 12, border: '1px solid ' + theme.border, padding: 20 }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <span style={{ fontSize: 20 }}>📊</span>
+                    <span style={{ fontSize: 14, fontWeight: 'bold', color: '#facc15' }}>{taTimeframe.toUpperCase()} Analysis</span>
+                  </div>
+                  {taLastGenerated && (
+                    <span style={{ fontSize: 10, color: theme.textMuted }}>Generated {formatTimeAgo(taLastGenerated)}</span>
+                  )}
+                </div>
+                <div style={{ fontSize: 14, lineHeight: 1.8, color: theme.text, whiteSpace: 'pre-wrap' }}>
+                  {taSummary}
+                </div>
+                <div style={{ marginTop: 16, paddingTop: 16, borderTop: '1px solid ' + theme.border, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <span style={{ fontSize: 10, color: theme.textMuted }}>🤖 Powered by Claude AI</span>
+                  <button
+                    onClick={() => fetchTASummary(taTimeframe)}
+                    style={{
+                      padding: '6px 12px',
+                      background: 'transparent',
+                      border: '1px solid ' + theme.border,
+                      borderRadius: 6,
+                      color: theme.textSecondary,
+                      fontSize: 11,
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 4,
+                    }}
+                  >
+                    🔄 Refresh
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* Empty State */}
+            {!taSummary && !taLoading && !taError && (
+              <div style={{ background: theme.bgSecondary, borderRadius: 12, border: '1px dashed ' + theme.border, padding: 40, textAlign: 'center' }}>
+                <div style={{ fontSize: 40, marginBottom: 12 }}>📈</div>
+                <div style={{ fontSize: 14, color: theme.textSecondary, marginBottom: 8 }}>Select a timeframe and generate your analysis</div>
+                <div style={{ fontSize: 11, color: theme.textMuted }}>AI will analyze current market conditions and provide actionable insights</div>
+              </div>
+            )}
+          </div>
+        )}
       </main>
 
       {/* Stats Footer */}
@@ -636,7 +840,7 @@ export default function BTCBattle() {
       </div>
 
       <div style={{ textAlign: 'center', padding: 8, fontSize: 10, color: theme.textMuted, position: 'relative', zIndex: 10 }}>
-        Data: CoinGecko • Fear & Greed: Alternative.me • Built by QuantumShieldLabs
+        Data: CoinGecko • Fear & Greed: Alternative.me • TA: Claude AI • Built by QuantumShieldLabs
       </div>
 
       <style>{`@keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }`}</style>

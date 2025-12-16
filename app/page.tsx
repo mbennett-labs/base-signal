@@ -620,8 +620,25 @@ export default function BTCBattle() {
         {activeTab === 'farcaster' && (
           <div>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
-              <h2 style={{ fontSize: 16, fontWeight: 'bold', margin: 0 }}>🟣 Farcaster Feed</h2>
-              <span style={{ fontSize: 10, color: theme.textMuted }}>Crypto & Base Community</span>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                <h2 style={{ fontSize: 16, fontWeight: 'bold', margin: 0 }}>🟣 Farcaster Feed</h2>
+                <span style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 10, color: '#4ade80', background: 'rgba(74,222,128,0.1)', padding: '2px 8px', borderRadius: 10 }}>
+                  <span style={{ width: 6, height: 6, background: '#4ade80', borderRadius: '50%', animation: 'pulse 1.5s ease-in-out infinite' }} />
+                  LIVE
+                </span>
+              </div>
+              <button
+                onClick={() => fetchFarcaster()}
+                style={{
+                  display: 'flex', alignItems: 'center', gap: 4,
+                  fontSize: 11, padding: '6px 12px',
+                  background: 'rgba(139,92,246,0.2)',
+                  border: '1px solid rgba(139,92,246,0.4)',
+                  borderRadius: 8, color: '#a78bfa', cursor: 'pointer'
+                }}
+              >
+                🔄 Refresh
+              </button>
             </div>
 
             <div style={{ padding: 12, marginBottom: 16, background: 'linear-gradient(135deg, rgba(138,99,210,0.2), rgba(99,102,241,0.2))', borderRadius: 10, border: '1px solid rgba(138,99,210,0.3)', display: 'flex', alignItems: 'center', gap: 10 }}>
@@ -862,4 +879,4 @@ export default function BTCBattle() {
       <style>{`@keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }`}</style>
     </div>
   );
-                                      }
+}

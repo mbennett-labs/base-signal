@@ -136,6 +136,8 @@ export default function BTCBattle() {
   const [activeTab, setActiveTab] = useState<'battle' | 'news' | 'farcaster' | 'ta'>('battle');
   const [isDarkMode, setIsDarkMode] = useState(true);
   
+  const [farcasterLoading, setFarcasterLoading] = useState(false);
+  
   // TA Summary state
   const [taTimeframe, setTaTimeframe] = useState<'4h' | 'daily' | 'weekly'>('daily');
   const [taSummary, setTaSummary] = useState<string>('');
@@ -270,6 +272,7 @@ export default function BTCBattle() {
 
   // Fetch Farcaster via our server-side API (avoids CORS)
   const fetchFarcaster = useCallback(async () => {
+    setFarcasterLoading(true);
     try {
       const response = await fetch('/api/farcaster');
       if (response.ok) {
@@ -279,6 +282,7 @@ export default function BTCBattle() {
             ...cast,
             timestamp: new Date(cast.timestamp),
           })));
+          setFarcasterLoading(false);
           return;
         }
       }
@@ -293,6 +297,7 @@ export default function BTCBattle() {
         { id: '5', author: 'onchain_dev', authorPfp: '', text: 'Just deployed my first Mini App on Base. The developer experience is amazing!', timestamp: new Date(Date.now() - 1000 * 60 * 150), likes: 89, channel: 'base' },
       ]);
     }
+    setFarcasterLoading(false);
   }, []);
 
   // Fetch TA Summary from API
@@ -629,15 +634,19 @@ export default function BTCBattle() {
               </div>
               <button
                 onClick={() => fetchFarcaster()}
+                disabled={farcasterLoading}
                 style={{
                   display: 'flex', alignItems: 'center', gap: 4,
                   fontSize: 11, padding: '6px 12px',
-                  background: 'rgba(139,92,246,0.2)',
+                  background: farcasterLoading ? 'rgba(139,92,246,0.4)' : 'rgba(139,92,246,0.2)',
                   border: '1px solid rgba(139,92,246,0.4)',
-                  borderRadius: 8, color: '#a78bfa', cursor: 'pointer'
+                  borderRadius: 8, color: '#a78bfa', cursor: farcasterLoading ? 'wait' : 'pointer',
+                  opacity: farcasterLoading ? 0.7 : 1,
+                  transition: 'all 0.2s'
                 }}
               >
-                🔄 Refresh
+                <span style={{ display: 'inline-block', animation: farcasterLoading ? 'spin 1s linear infinite' : 'none' }}>🔄</span> 
+                {farcasterLoading ? 'Loading...' : 'Refresh'}
               </button>
             </div>
 
@@ -876,7 +885,7 @@ export default function BTCBattle() {
         Data: CoinGecko • Fear & Greed: Alternative.me • TA: Claude AI • Built by QuantumShieldLabs
       </div>
 
-      <style>{`@keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }`}</style>
+      <style>{`@keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } } @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }`}</style>
     </div>
   );
 }

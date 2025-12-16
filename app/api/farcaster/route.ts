@@ -17,6 +17,16 @@ const FEATURED_FIDS = [
   { fid: 99, fallbackName: 'jessepollak' },      // Jesse Pollak (Base)
   { fid: 680, fallbackName: 'linda' },           // Linda Xie
   { fid: 2433, fallbackName: 'balajis.eth' },    // Balaji
+  { fid: 12, fallbackName: 'woj.eth' },          // Woj
+  { fid: 7143, fallbackName: 'seneca' },         // Seneca (active crypto poster)
+  { fid: 239, fallbackName: 'ted' },             // Ted (Farcaster team)
+  { fid: 576, fallbackName: 'nonlinear.eth' },   // Nonlinear
+  { fid: 1317, fallbackName: 'cassie' },         // Cassie
+  { fid: 194, fallbackName: 'cameron' },         // Cameron (Warpcast)
+  { fid: 617, fallbackName: 'ace' },             // Ace
+  { fid: 2904, fallbackName: 'july' },           // July
+  { fid: 4167, fallbackName: 'pinata' },         // Pinata
+  { fid: 7732, fallbackName: 'base' },           // Base official
 ];
 
 export async function GET() {
@@ -90,7 +100,7 @@ export async function GET() {
     // Sort by timestamp (newest first) and limit
     const sortedCasts = allCasts
       .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
-      .slice(0, 8);
+      .slice(0, 12);
 
     // If we got some casts, return them
     if (sortedCasts.length > 0) {

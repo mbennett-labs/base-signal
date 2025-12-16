@@ -457,8 +457,8 @@ export default function BTCBattle() {
               borderRadius: 10, color: activeTab === tab.id ? '#facc15' : theme.textSecondary, cursor: 'pointer', textAlign: 'center'
             }}
           >
-            <div style={{ fontSize: 13, fontWeight: 'bold' }}>{tab.label}</div>
-            <div style={{ fontSize: 8, opacity: 0.7 }}>{tab.desc}</div>
+            <div style={{ fontSize: 14, fontWeight: 'bold' }}>{tab.label}</div>
+            <div style={{ fontSize: 9, opacity: 0.7 }}>{tab.desc}</div>
           </button>
         ))}
       </div>
@@ -577,7 +577,7 @@ export default function BTCBattle() {
                   >
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12 }}>
                       <div style={{ flex: 1 }}>
-                        <div style={{ fontSize: 14, fontWeight: 500, marginBottom: 6, lineHeight: 1.4, color: theme.text }}>{item.title}</div>
+                        <div style={{ fontSize: 15, fontWeight: 600, marginBottom: 6, lineHeight: 1.4, color: theme.text }}>{item.title}</div>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 11, color: theme.textMuted }}>
                           <span>{item.source}</span>
                           <span>•</span>
@@ -628,7 +628,7 @@ export default function BTCBattle() {
                       <div style={{ fontSize: 10, color: theme.textMuted, whiteSpace: 'nowrap' }}>{formatTimeAgo(cast.timestamp)} • /{cast.channel}</div>
                     </div>
                   </div>
-                  <div style={{ fontSize: 14, lineHeight: 1.6, color: theme.text, marginBottom: 10, opacity: 0.95 }}>{cast.text}</div>
+                  <div style={{ fontSize: 15, lineHeight: 1.7, color: theme.text, marginBottom: 10, opacity: 0.95, fontWeight: 500 }}>{cast.text}</div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 16, fontSize: 12, color: theme.textMuted }}>
                     <span>❤️ {cast.likes}</span>
                     <span style={{ padding: '2px 8px', background: 'rgba(139,92,246,0.2)', borderRadius: 4, color: '#a78bfa', fontSize: 10 }}>/{cast.channel}</span>
@@ -763,7 +763,7 @@ export default function BTCBattle() {
                     <span style={{ fontSize: 10, color: theme.textMuted }}>Generated {formatTimeAgo(taLastGenerated)}</span>
                   )}
                 </div>
-                <div style={{ fontSize: 14, lineHeight: 1.8, color: theme.text, whiteSpace: 'pre-wrap' }}>
+                <div style={{ fontSize: 16, lineHeight: 1.9, color: theme.text, whiteSpace: 'pre-wrap', fontWeight: 500 }}>
                   {taSummary}
                 </div>
                 <div style={{ marginTop: 16, paddingTop: 16, borderTop: '1px solid ' + theme.border, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
@@ -793,8 +793,8 @@ export default function BTCBattle() {
             {!taSummary && !taLoading && !taError && (
               <div style={{ background: theme.bgSecondary, borderRadius: 12, border: '1px dashed ' + theme.border, padding: 40, textAlign: 'center' }}>
                 <div style={{ fontSize: 40, marginBottom: 12 }}>📈</div>
-                <div style={{ fontSize: 14, color: theme.textSecondary, marginBottom: 8 }}>Select a timeframe and generate your analysis</div>
-                <div style={{ fontSize: 11, color: theme.textMuted }}>AI will analyze current market conditions and provide actionable insights</div>
+                <div style={{ fontSize: 15, color: theme.textSecondary, marginBottom: 8, fontWeight: 500 }}>Select a timeframe and generate your analysis</div>
+                <div style={{ fontSize: 12, color: theme.textMuted }}>AI will analyze current market conditions and provide actionable insights</div>
               </div>
             )}
           </div>

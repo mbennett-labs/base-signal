@@ -268,15 +268,31 @@ export default function BTCBattle() {
     }
   }, []);
 
-  // Curated Farcaster content (avoids CORS issues with Pinata Hub)
+  // Fetch Farcaster via our server-side API (avoids CORS)
   const fetchFarcaster = useCallback(async () => {
-    setFarcasterCasts([
-      { id: '1', author: 'dwr.eth', authorPfp: '', text: 'Building the decentralized social network. Farcaster is growing every day.', timestamp: new Date(Date.now() - 1000 * 60 * 30), likes: 342, channel: 'farcaster' },
-      { id: '2', author: 'vitalik.eth', authorPfp: '', text: 'Excited about the progress on L2 scaling. Base and other rollups are shipping.', timestamp: new Date(Date.now() - 1000 * 60 * 60), likes: 891, channel: 'ethereum' },
-      { id: '3', author: 'jessepollak', authorPfp: '', text: 'Base is for everyone. Keep building, keep shipping.', timestamp: new Date(Date.now() - 1000 * 60 * 90), likes: 567, channel: 'base' },
-      { id: '4', author: 'btc_maxi', authorPfp: '', text: 'Bitcoin market update: Watching key resistance levels. Whale activity increasing.', timestamp: new Date(Date.now() - 1000 * 60 * 120), likes: 124, channel: 'bitcoin' },
-      { id: '5', author: 'onchain_dev', authorPfp: '', text: 'Just deployed my first Mini App on Base. The developer experience is amazing!', timestamp: new Date(Date.now() - 1000 * 60 * 150), likes: 89, channel: 'base' },
-    ]);
+    try {
+      const response = await fetch('/api/farcaster');
+      if (response.ok) {
+        const data = await response.json();
+        if (data.casts && data.casts.length > 0) {
+          setFarcasterCasts(data.casts.map((cast: any) => ({
+            ...cast,
+            timestamp: new Date(cast.timestamp),
+          })));
+          return;
+        }
+      }
+      throw new Error('Failed to fetch');
+    } catch (e) {
+      console.log('Using fallback Farcaster content');
+      setFarcasterCasts([
+        { id: '1', author: 'dwr.eth', authorPfp: '', text: 'Building the decentralized social network. Farcaster is growing every day.', timestamp: new Date(Date.now() - 1000 * 60 * 30), likes: 342, channel: 'farcaster' },
+        { id: '2', author: 'vitalik.eth', authorPfp: '', text: 'Excited about the progress on L2 scaling. Base and other rollups are shipping.', timestamp: new Date(Date.now() - 1000 * 60 * 60), likes: 891, channel: 'ethereum' },
+        { id: '3', author: 'jessepollak', authorPfp: '', text: 'Base is for everyone. Keep building, keep shipping.', timestamp: new Date(Date.now() - 1000 * 60 * 90), likes: 567, channel: 'base' },
+        { id: '4', author: 'btc_maxi', authorPfp: '', text: 'Bitcoin market update: Watching key resistance levels. Whale activity increasing.', timestamp: new Date(Date.now() - 1000 * 60 * 120), likes: 124, channel: 'bitcoin' },
+        { id: '5', author: 'onchain_dev', authorPfp: '', text: 'Just deployed my first Mini App on Base. The developer experience is amazing!', timestamp: new Date(Date.now() - 1000 * 60 * 150), likes: 89, channel: 'base' },
+      ]);
+    }
   }, []);
 
   // Fetch TA Summary from API
@@ -846,4 +862,4 @@ export default function BTCBattle() {
       <style>{`@keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }`}</style>
     </div>
   );
-}
+                                      }

@@ -3,6 +3,13 @@ import type { Metadata, Viewport } from "next";
 export const metadata: Metadata = {
   title: "BTC Battle - Real-Time Whale War",
   description: "Watch bulls and bears fight for Bitcoin dominance in real-time",
+  icons: {
+    icon: [
+      { url: "/favicon-32.png", sizes: "32x32", type: "image/png" },
+      { url: "/favicon-192.png", sizes: "192x192", type: "image/png" },
+    ],
+    apple: "/favicon-192.png",
+  },
   openGraph: {
     title: "BTC Battle - Real-Time Whale War",
     description: "Watch bulls and bears fight for Bitcoin dominance",
@@ -26,6 +33,9 @@ export default function RootLayout({
   return (
     <html lang="en">
       <head>
+        <link rel="icon" href="/favicon-32.png" sizes="32x32" type="image/png" />
+        <link rel="icon" href="/favicon-192.png" sizes="192x192" type="image/png" />
+        <link rel="apple-touch-icon" href="/favicon-192.png" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link 

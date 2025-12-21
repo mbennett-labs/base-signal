@@ -885,6 +885,67 @@ export default function BTCBattle() {
         Data: CoinGecko • Fear & Greed: Alternative.me • TA: Claude AI • Built by QuantumShieldLabs
       </div>
 
+     {/* Legend Modal */}
+      {showLegend && (
+        <div style={{
+          position: 'fixed',
+          inset: 0,
+          background: 'rgba(0,0,0,0.8)',
+          zIndex: 100,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          padding: 20,
+        }} onClick={() => setShowLegend(false)}>
+          <div style={{
+            background: isDarkMode ? '#1e293b' : '#ffffff',
+            borderRadius: 16,
+            padding: 24,
+            maxWidth: 400,
+            maxHeight: '80vh',
+            overflowY: 'auto',
+            border: '1px solid ' + theme.border,
+          }} onClick={(e) => e.stopPropagation()}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+              <h2 style={{ margin: 0, fontSize: 18, color: '#facc15' }}>📖 Legend</h2>
+              <button onClick={() => setShowLegend(false)} style={{ background: 'none', border: 'none', fontSize: 20, cursor: 'pointer', color: theme.textMuted }}>✕</button>
+            </div>
+            
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+              <div>
+                <div style={{ fontSize: 14, fontWeight: 'bold', color: '#4ade80', marginBottom: 4 }}>🐂 Bulls (Green)</div>
+                <div style={{ fontSize: 12, color: theme.textSecondary }}>Buyers pushing price UP. More bulls = bullish momentum.</div>
+              </div>
+              
+              <div>
+                <div style={{ fontSize: 14, fontWeight: 'bold', color: '#f87171', marginBottom: 4 }}>🐻 Bears (Red)</div>
+                <div style={{ fontSize: 12, color: theme.textSecondary }}>Sellers pushing price DOWN. More bears = bearish pressure.</div>
+              </div>
+              
+              <div>
+                <div style={{ fontSize: 14, fontWeight: 'bold', color: '#facc15', marginBottom: 4 }}>⚔️ Tug of War</div>
+                <div style={{ fontSize: 12, color: theme.textSecondary }}>The rope shows who is winning. Left = bulls dominating. Right = bears dominating.</div>
+              </div>
+              
+              <div>
+                <div style={{ fontSize: 14, fontWeight: 'bold', color: '#3b82f6', marginBottom: 4 }}>🐋 Whale Alerts</div>
+                <div style={{ fontSize: 12, color: theme.textSecondary }}>Large transactions (100+ BTC). Green = buying, Red = selling.</div>
+              </div>
+              
+              <div style={{ borderTop: '1px solid ' + theme.border, paddingTop: 16 }}>
+                <div style={{ fontSize: 12, fontWeight: 'bold', color: theme.text, marginBottom: 8 }}>Indicators:</div>
+                <div style={{ fontSize: 11, color: theme.textSecondary, lineHeight: 1.8 }}>
+                  <div><strong>BTC.D</strong> - Bitcoin Dominance (% of total crypto market)</div>
+                  <div><strong>USDT.D</strong> - Stablecoin Dominance (high = fear)</div>
+                  <div><strong>RSI</strong> - Relative Strength (70+ overbought, 30- oversold)</div>
+                  <div><strong>F&G</strong> - Fear & Greed Index (0-100)</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       <style>{`@keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } } @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }`}</style>
     </div>
   );

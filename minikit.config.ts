@@ -26,7 +26,7 @@ export const minikitConfig = {
       `${ROOT_URL}/screenshot-2-news.png`,
       `${ROOT_URL}/screenshot-3-farcaster.png`
     ],
-    iconUrl: `${ROOT_URL}/icon.png`,
+    iconUrl: `${ROOT_URL}/icon-1024.png`,
     splashImageUrl: `${ROOT_URL}/splash.png`,
     splashBackgroundColor: "#0a0a0f",
     homeUrl: ROOT_URL,

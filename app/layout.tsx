@@ -13,8 +13,24 @@ export const metadata: Metadata = {
   openGraph: {
     title: "BTC Battle - Real-Time Whale War",
     description: "Watch bulls and bears fight for Bitcoin dominance",
-    images: ["/og.png"],
+    images: ["https://base-signal.vercel.app/og.png"],
   },
+  other: {
+    "fc:miniapp": JSON.stringify({
+      version: "1",
+      imageUrl: "https://base-signal.vercel.app/og.png",
+      button: {
+        title: "Open BTC Battle",
+        action: {
+          type: "launch_frame",
+          name: "BTC Battle",
+          url: "https://base-signal.vercel.app",
+          splashImageUrl: "https://base-signal.vercel.app/splash.png",
+          splashBackgroundColor: "#0a0a0f"
+        }
+      }
+    })
+  }
 };
 
 export const viewport: Viewport = {

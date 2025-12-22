@@ -147,14 +147,7 @@ export default function BTCBattle() {
 
   // Initialize Farcaster SDK
   useEffect(() => {
-    const initSdk = async () => {
-      try {
-        await sdk.actions.ready();
-      } catch (e) {
-        console.log('SDK ready called');
-      }
-    };
-    initSdk();
+    sdk.actions.ready();
   }, []);
 
   // Theme colors

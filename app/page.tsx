@@ -176,25 +176,25 @@ export default function BTCBattle() {
     };
   }, [price]);
 
-  const fetchPrice = useCallback(async () => {
-    try {
-      const res = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=usd&include_24hr_change=true');
-      const data = await res.json();
-      if (data.bitcoin) {
-        const newPrice = Math.round(data.bitcoin.usd);
-        setPrice(prev => {
-          if (prev !== 0 && prev !== newPrice) {
-            setPriceFlash(newPrice > prev ? 'green' : 'red');
-            setTimeout(() => setPriceFlash(''), 300);
-          }
-          return newPrice;
-        });
-        setPriceChange(data.bitcoin.usd_24h_change || 0);
-      }
-    } catch (e) {
-      console.log('Price fetch failed');
+const fetchPrice = useCallback(async () => {
+  try {
+    const res = await fetch('/api/price');
+    const data = await res.json();
+    if (data.price) {
+      const newPrice = data.price;
+      setPrice(prev => {
+        if (prev !== 0 && prev !== newPrice) {
+          setPriceFlash(newPrice > prev ? 'green' : 'red');
+          setTimeout(() => setPriceFlash(''), 300);
+        }
+        return newPrice;
+      });
+      setPriceChange(data.change || 0);
     }
-  }, []);
+  } catch (e) {
+    console.log('Price fetch failed');
+  }
+}, []);
 
   const fetchGlobal = useCallback(async () => {
     try {

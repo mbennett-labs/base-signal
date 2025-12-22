@@ -118,17 +118,17 @@ function Tooltip({ statKey, children, isDark = true }: { statKey: string; childr
 }
 
 export default function BTCBattle() {
-  const [price, setPrice] = useState(98432);
-  const [priceChange, setPriceChange] = useState(2.34);
+  const [price, setPrice] = useState(0);
+  const [priceChange, setPriceChange] = useState(0);
   const [btcDominance, setBtcDominance] = useState(58.2);
   const [usdtDominance, setUsdtDominance] = useState(4.8);
-  const [fearGreed, setFearGreed] = useState<FearGreedData>({ value: 72, text: 'Greed' });
-  const [rsi, setRsi] = useState(62);
-  const [longShortRatio, setLongShortRatio] = useState(1.24);
-  const [tugPosition, setTugPosition] = useState(55);
+  const [fearGreed, setFearGreed] = useState<FearGreedData>({ value: 50, text: 'Neutral' });
+  const [rsi, setRsi] = useState(50);
+  const [longShortRatio, setLongShortRatio] = useState(1.0);
+  const [tugPosition, setTugPosition] = useState(50);
   const [whaleAlerts, setWhaleAlerts] = useState<WhaleAlert[]>([]);
-  const [bullPower, setBullPower] = useState(12.4);
-  const [bearPower, setBearPower] = useState(9.2);
+  const [bullPower, setBullPower] = useState(0);
+  const [bearPower, setBearPower] = useState(0);
   const [priceFlash, setPriceFlash] = useState('');
   const [showLegend, setShowLegend] = useState(false);
   const [newsItems, setNewsItems] = useState<NewsItem[]>([]);
@@ -181,11 +181,18 @@ export default function BTCBattle() {
       const res = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=usd&include_24hr_change=true');
       const data = await res.json();
       if (data.bitcoin) {
-        setPrice(Math.round(data.bitcoin.usd));
-        setPriceChange(data.bitcoin.usd_24h_change || 2.34);
+        const newPrice = Math.round(data.bitcoin.usd);
+        setPrice(prev => {
+          if (prev !== 0 && prev !== newPrice) {
+            setPriceFlash(newPrice > prev ? 'green' : 'red');
+            setTimeout(() => setPriceFlash(''), 300);
+          }
+          return newPrice;
+        });
+        setPriceChange(data.bitcoin.usd_24h_change || 0);
       }
     } catch (e) {
-      console.log('Using simulated price');
+      console.log('Price fetch failed');
     }
   }, []);
 
@@ -364,18 +371,10 @@ export default function BTCBattle() {
     const initial = Array(4).fill(0).map(() => generateWhaleAlert());
     setWhaleAlerts(initial);
     
+    // Fetch real price every 10 seconds
     const priceTick = setInterval(() => {
-      setPrice(prev => {
-        const newPrice = Math.round(prev + (Math.random() - 0.5) * 80);
-        setPriceFlash(newPrice > prev ? 'green' : newPrice < prev ? 'red' : '');
-        setTimeout(() => setPriceFlash(''), 300);
-        return newPrice;
-      });
-      if (Math.random() > 0.85) {
-        setRsi(prev => Math.max(20, Math.min(80, prev + (Math.random() - 0.5) * 5)));
-        setLongShortRatio(prev => Math.max(0.5, Math.min(2, prev + (Math.random() - 0.5) * 0.1)));
-      }
-    }, 2000);
+      fetchPrice();
+    }, 10000);
     
     const whaleGen = setInterval(() => {
       if (Math.random() > 0.6) {
@@ -383,7 +382,8 @@ export default function BTCBattle() {
       }
     }, 4000);
     
-    const dataFetch = setInterval(() => { fetchPrice(); fetchGlobal(); }, 30000);
+    // Fetch global data every 60 seconds
+    const dataFetch = setInterval(() => { fetchGlobal(); }, 60000);
     const fgFetch = setInterval(fetchFearGreed, 300000);
     const newsFetch = setInterval(fetchNews, 120000);
     
@@ -486,7 +486,7 @@ export default function BTCBattle() {
             {/* Price Display */}
             <div style={{ textAlign: 'center', marginBottom: 20 }}>
               <div style={{ fontSize: 52, fontWeight: 900, fontFamily: "'Orbitron', sans-serif", letterSpacing: 2, color: priceFlash === 'green' ? '#4ade80' : priceFlash === 'red' ? '#f87171' : 'white' }}>
-                {formatPrice(price)}
+                {price === 0 ? '...' : formatPrice(price)}
               </div>
               <div style={{ fontSize: 18, fontFamily: "'Share Tech Mono', monospace", color: priceChange >= 0 ? '#4ade80' : '#f87171' }}>
                 {priceChange >= 0 ? '▲' : '▼'} {Math.abs(priceChange).toFixed(2)}%
@@ -521,7 +521,7 @@ export default function BTCBattle() {
                   </div>
                   <div style={{ position: 'relative', height: 16, background: 'linear-gradient(90deg, #22c55e, #facc15, #ef4444)', borderRadius: 8, boxShadow: '0 0 20px rgba(250,204,21,0.3)' }}>
                     <div style={{ position: 'absolute', top: '50%', left: tugPosition + '%', transform: 'translate(-50%, -50%)', width: 48, height: 48, background: '#0f172a', border: '3px solid #facc15', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 0 20px rgba(250,204,21,0.5)', transition: 'left 0.5s' }}>
-                      <span style={{ fontSize: 9, fontFamily: "'Share Tech Mono', monospace", fontWeight: 'bold' }}>{formatPrice(price).slice(0, 6)}</span>
+                      <span style={{ fontSize: 9, fontFamily: "'Share Tech Mono', monospace", fontWeight: 'bold' }}>{price === 0 ? '...' : formatPrice(price).slice(0, 6)}</span>
                     </div>
                   </div>
                   <div style={{ textAlign: 'center', fontSize: 11, color: '#64748b', marginTop: 8 }}>
@@ -754,7 +754,7 @@ export default function BTCBattle() {
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12 }}>
                 <div style={{ textAlign: 'center' }}>
                   <div style={{ fontSize: 10, color: theme.textMuted }}>Price</div>
-                  <div style={{ fontSize: 14, fontWeight: 'bold', color: theme.text }}>{formatPrice(price)}</div>
+                  <div style={{ fontSize: 14, fontWeight: 'bold', color: theme.text }}>{price === 0 ? '...' : formatPrice(price)}</div>
                 </div>
                 <div style={{ textAlign: 'center' }}>
                   <div style={{ fontSize: 10, color: theme.textMuted }}>24h Change</div>

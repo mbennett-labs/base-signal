@@ -160,7 +160,8 @@ export default function BTCBattle() {
   const [farcasterCasts, setFarcasterCasts] = useState<FarcasterCast[]>([]);
   const [activeTab, setActiveTab] = useState<'battle' | 'news' | 'farcaster' | 'ta'>('battle');
   const [isDarkMode, setIsDarkMode] = useState(true);
-  
+  const [tipKey, setTipKey] = useState(0);
+
   const [farcasterLoading, setFarcasterLoading] = useState(false);
   
   // TA Summary state
@@ -474,6 +475,10 @@ const fetchPrice = useCallback(async () => {
           <button onClick={async () => { try { await addFrame(); } catch(e) { console.error('Save app failed:', e); } }} style={{ fontSize: 11, padding: '6px 12px', background: 'rgba(0,82,255,0.2)', border: '1px solid rgba(0,82,255,0.4)', borderRadius: 8, color: '#5b9aff', cursor: 'pointer' }}>
             Save App
           </button>
+          <span style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '4px 10px', fontSize: 11, fontWeight: 700, color: '#fff', background: 'rgba(0,82,255,0.2)', border: '1px solid rgba(0,82,255,0.35)', borderRadius: 20 }}>
+            <svg width="14" height="14" viewBox="0 0 111 111" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="55.5" cy="55.5" r="55.5" fill="#0052FF"/><path d="M55.4 93.3c20.9 0 37.9-17 37.9-37.9S76.3 17.5 55.4 17.5c-19.5 0-35.6 14.8-37.6 33.8h49.8v11.2H17.8c2 19 18.1 30.8 37.6 30.8z" fill="white"/></svg>
+            Base
+          </span>
           <Wallet>
             <ConnectWallet><Avatar /><Name /></ConnectWallet>
             <WalletDropdown>
@@ -914,7 +919,7 @@ const fetchPrice = useCallback(async () => {
       {/* Tip the Builder */}
       <div style={{ textAlign: 'center', padding: '16px 20px', background: isDarkMode ? 'rgba(250,204,21,0.05)' : 'rgba(250,204,21,0.1)', borderTop: '1px solid rgba(250,204,21,0.2)', position: 'relative', zIndex: 10 }}>
         <div style={{ fontSize: 12, color: '#facc15', marginBottom: 10, fontWeight: 'bold' }}>☕ Tip the Builder</div>
-        <Transaction chainId={base.id} calls={tipCalls} isSponsored onSuccess={() => console.log('Tip sent!')} onError={(err) => console.error('Tip failed:', err)}>
+        <Transaction key={`tip-${tipKey}`} chainId={base.id} calls={tipCalls} isSponsored onSuccess={() => { console.log('Tip sent!'); setTipKey((k) => k + 1); }} onError={(err) => console.error('Tip failed:', err)}>
           <TransactionButton text="Tip the Builder (1 USDC)" />
           <TransactionToast><TransactionToastIcon /><TransactionToastLabel /><TransactionToastAction /></TransactionToast>
         </Transaction>

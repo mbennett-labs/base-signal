@@ -75,6 +75,7 @@ export function BattleTab() {
   const [whaleAlerts, setWhaleAlerts] = useState<WhaleAlert[]>([]);
   const [loading, setLoading] = useState(true);
   const [priceError, setPriceError] = useState(false);
+  const [tipKey, setTipKey] = useState(0);
 
   useEffect(() => {
     const fetchPrice = async () => {
@@ -246,10 +247,11 @@ export function BattleTab() {
       <div className={styles.tipSection}>
         <p className={styles.tipLabel}>Support the builder</p>
         <Transaction
+          key={`tip-${tipKey}`}
           chainId={base.id}
           calls={tipCalls}
           isSponsored
-          onSuccess={() => console.log("Tip sent successfully!")}
+          onSuccess={() => { console.log("Tip sent successfully!"); setTipKey((k) => k + 1); }}
           onError={(err) => console.error("Tip failed:", err)}
         >
           <TransactionButton text="Tip the Builder (1 USDC)" />

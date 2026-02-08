@@ -35,6 +35,13 @@ export function Header() {
         <button onClick={handleSaveApp} className={styles.saveButton}>
           Save App
         </button>
+        <span className={styles.baseBadge}>
+          <svg width="14" height="14" viewBox="0 0 111 111" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="55.5" cy="55.5" r="55.5" fill="#0052FF"/>
+            <path d="M55.4 93.3c20.9 0 37.9-17 37.9-37.9S76.3 17.5 55.4 17.5c-19.5 0-35.6 14.8-37.6 33.8h49.8v11.2H17.8c2 19 18.1 30.8 37.6 30.8z" fill="white"/>
+          </svg>
+          Base
+        </span>
         <Wallet>
           <ConnectWallet>
             <Avatar />

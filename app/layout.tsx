@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from "next";
+import { RootProvider } from "./rootProvider";
 
 export const metadata: Metadata = {
   title: "BTC Battle - Real-Time Whale War",
@@ -16,7 +17,7 @@ export const metadata: Metadata = {
     images: ["https://base-signal.vercel.app/og.png"],
   },
   other: {
-    "fc:miniapp": JSON.stringify({
+    "fc:frame": JSON.stringify({
       version: "1",
       imageUrl: "https://base-signal.vercel.app/og.png",
       button: {
@@ -54,13 +55,15 @@ export default function RootLayout({
         <link rel="apple-touch-icon" href="/favicon-192.png" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link 
-          href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@400;500;600;700&family=Share+Tech+Mono&display=swap" 
-          rel="stylesheet" 
+        <link
+          href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@400;500;600;700&family=Share+Tech+Mono&display=swap"
+          rel="stylesheet"
         />
       </head>
       <body style={{ margin: 0, padding: 0 }}>
-        {children}
+        <RootProvider>
+          {children}
+        </RootProvider>
       </body>
     </html>
   );

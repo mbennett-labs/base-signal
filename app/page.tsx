@@ -1,7 +1,14 @@
 "use client";
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { sdk } from '@farcaster/frame-sdk';
+import { useMiniKit, useAddFrame, useComposeCast } from '@coinbase/onchainkit/minikit';
+import { Transaction, TransactionButton, TransactionToast, TransactionToastIcon, TransactionToastLabel, TransactionToastAction } from '@coinbase/onchainkit/transaction';
+import { ConnectWallet, Wallet, WalletDropdown, WalletDropdownDisconnect } from '@coinbase/onchainkit/wallet';
+import { Address, Avatar, Name, Identity } from '@coinbase/onchainkit/identity';
+import { useAccount } from 'wagmi';
+import { encodeFunctionData } from 'viem';
+import { base } from 'wagmi/chains';
 
 // Stat definitions for tooltips
 const statDefinitions: Record<string, { full: string; desc: string; bullish: string; bearish: string }> = {
@@ -117,7 +124,25 @@ function Tooltip({ statKey, children, isDark = true }: { statKey: string; childr
   );
 }
 
+const USDC_BASE = '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913' as const;
+const TIP_WALLET = '0x91c6a08f25a5feb3BBaB465A8a0e59DC05D5A7b0' as const;
+const erc20TransferAbi = [{ name: 'transfer', type: 'function', stateMutability: 'nonpayable', inputs: [{ name: 'to', type: 'address' }, { name: 'amount', type: 'uint256' }], outputs: [{ name: '', type: 'bool' }] }] as const;
+
 export default function BTCBattle() {
+  const { setFrameReady, isFrameReady } = useMiniKit();
+  const addFrame = useAddFrame();
+  const { composeCastAsync } = useComposeCast();
+  const { address, isConnected } = useAccount();
+
+  const tipCalls = useMemo(() => [{
+    to: USDC_BASE,
+    data: encodeFunctionData({
+      abi: erc20TransferAbi,
+      functionName: 'transfer',
+      args: [TIP_WALLET, BigInt(1_000_000)]
+    })
+  }], []);
+
   const [price, setPrice] = useState(0);
   const [priceChange, setPriceChange] = useState(0);
   const [btcDominance, setBtcDominance] = useState(58.2);
@@ -145,10 +170,10 @@ export default function BTCBattle() {
   const [taError, setTaError] = useState<string>('');
   const [taLastGenerated, setTaLastGenerated] = useState<Date | null>(null);
 
-  // Initialize Farcaster SDK
+  // Initialize MiniApp frame
   useEffect(() => {
-    sdk.actions.ready();
-  }, []);
+    if (!isFrameReady) setFrameReady();
+  }, [setFrameReady, isFrameReady]);
 
   // Theme colors
   const theme = {
@@ -446,6 +471,16 @@ const fetchPrice = useCallback(async () => {
           <button onClick={() => setIsDarkMode(!isDarkMode)} style={{ fontSize: 11, padding: '6px 12px', background: isDarkMode ? 'rgba(51,65,85,0.5)' : 'rgba(241,245,249,0.9)', border: '1px solid ' + theme.border, borderRadius: 8, color: theme.textSecondary, cursor: 'pointer' }}>
             {isDarkMode ? '☀️ Light' : '🌙 Dark'}
           </button>
+          <button onClick={async () => { try { await addFrame(); } catch(e) { console.error('Save app failed:', e); } }} style={{ fontSize: 11, padding: '6px 12px', background: 'rgba(0,82,255,0.2)', border: '1px solid rgba(0,82,255,0.4)', borderRadius: 8, color: '#5b9aff', cursor: 'pointer' }}>
+            Save App
+          </button>
+          <Wallet>
+            <ConnectWallet><Avatar /><Name /></ConnectWallet>
+            <WalletDropdown>
+              <Identity hasCopyAddressOnClick><Avatar /><Name /><Address /></Identity>
+              <WalletDropdownDisconnect />
+            </WalletDropdown>
+          </Wallet>
           <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 11, color: theme.textMuted }}>
             <span style={{ width: 8, height: 8, background: '#4ade80', borderRadius: '50%', animation: 'pulse 1.5s ease-in-out infinite' }} />
             LIVE
@@ -672,6 +707,12 @@ const fetchPrice = useCallback(async () => {
               ))}
             </div>
 
+            <div style={{ marginTop: 16, marginBottom: 16, textAlign: 'center' }}>
+              <button onClick={async () => { try { await composeCastAsync({ text: "Check out BTC Battle - real-time whale tracking and market signals on Base!", embeds: [process.env.NEXT_PUBLIC_URL || "https://base-signal.vercel.app"] }); } catch(e) { console.error('Share failed:', e); } }} style={{ padding: '12px 24px', background: 'linear-gradient(135deg, #7c3aed, #6d28d9)', border: 'none', borderRadius: 10, color: 'white', fontWeight: 700, fontSize: 14, cursor: 'pointer' }}>
+                Share Battle
+              </button>
+            </div>
+
             <div style={{ marginTop: 20, padding: 16, background: 'rgba(99,102,241,0.1)', borderRadius: 12, border: '1px solid rgba(99,102,241,0.3)', textAlign: 'center' }}>
               <div style={{ fontSize: 13, fontWeight: 'bold', marginBottom: 4 }}>Join the conversation</div>
               <div style={{ fontSize: 11, color: theme.textSecondary }}>Follow @freakid on Warpcast for updates</div>
@@ -838,6 +879,12 @@ const fetchPrice = useCallback(async () => {
 
       {/* Stats Footer */}
       <footer style={{ position: 'relative', zIndex: 10, display: 'flex', justifyContent: 'center', gap: 24, padding: '16px 20px', borderTop: '1px solid ' + theme.border, background: isDarkMode ? 'rgba(10,10,15,0.95)' : 'rgba(255,255,255,0.95)', flexWrap: 'wrap' }}>
+        {isConnected && address && (
+          <div style={{ textAlign: 'center' }}>
+            <div style={{ fontSize: 9, color: theme.textMuted, textTransform: 'uppercase', letterSpacing: 1 }}>Wallet</div>
+            <div style={{ fontFamily: "'Share Tech Mono', monospace", fontWeight: 'bold', fontSize: 11 }}>{address.slice(0, 6)}...{address.slice(-4)}</div>
+          </div>
+        )}
         <Tooltip statKey="BTC.D" isDark={isDarkMode}>
           <div style={{ textAlign: 'center' }}>
             <div style={{ fontSize: 9, color: theme.textMuted, textTransform: 'uppercase', letterSpacing: 1 }}>BTC.D</div>
@@ -864,14 +911,14 @@ const fetchPrice = useCallback(async () => {
         </Tooltip>
       </footer>
 
-      {/* Tip Wallet */}
+      {/* Tip the Builder */}
       <div style={{ textAlign: 'center', padding: '16px 20px', background: isDarkMode ? 'rgba(250,204,21,0.05)' : 'rgba(250,204,21,0.1)', borderTop: '1px solid rgba(250,204,21,0.2)', position: 'relative', zIndex: 10 }}>
-        <div style={{ fontSize: 12, color: '#facc15', marginBottom: 6, fontWeight: 'bold' }}>☕ Support BTC Battle</div>
-        <div onClick={() => { navigator.clipboard.writeText('0x8E48bCE9B40C7E0c13b200AEad4A357e6cA2de19'); alert('Wallet address copied!'); }} style={{ fontSize: 11, color: theme.textSecondary, fontFamily: "'Share Tech Mono', monospace", cursor: 'pointer', padding: '8px 16px', background: theme.bgSecondary, borderRadius: 8, border: '1px solid ' + theme.border, display: 'inline-block' }}>
-          0x8E48bCE9B40C7E0c13b200AEad4A357e6cA2de19
-          <span style={{ marginLeft: 8, fontSize: 10, color: theme.textMuted }}>📋 Click to copy</span>
-        </div>
-        <div style={{ fontSize: 9, color: theme.textMuted, marginTop: 6 }}>ETH • USDC • Any token on Base 💙</div>
+        <div style={{ fontSize: 12, color: '#facc15', marginBottom: 10, fontWeight: 'bold' }}>☕ Tip the Builder</div>
+        <Transaction chainId={base.id} calls={tipCalls} isSponsored onSuccess={() => console.log('Tip sent!')} onError={(err) => console.error('Tip failed:', err)}>
+          <TransactionButton text="Tip the Builder (1 USDC)" />
+          <TransactionToast><TransactionToastIcon /><TransactionToastLabel /><TransactionToastAction /></TransactionToast>
+        </Transaction>
+        <div style={{ fontSize: 9, color: theme.textMuted, marginTop: 6 }}>Gasless via CDP Paymaster on Base</div>
       </div>
 
       <div style={{ textAlign: 'center', padding: 8, fontSize: 10, color: theme.textMuted, position: 'relative', zIndex: 10 }}>

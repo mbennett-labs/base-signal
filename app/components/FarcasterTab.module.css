@@ -27,7 +27,7 @@
 .userFid {
   font-size: 0.75rem;
   color: rgba(255, 255, 255, 0.4);
-  font-family: var(--font-source-code-pro), monospace;
+  font-family: 'Share Tech Mono', monospace;
 }
 
 /* Share Section */

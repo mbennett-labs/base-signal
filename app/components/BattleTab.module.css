@@ -107,7 +107,7 @@
   font-size: 0.85rem;
   font-weight: 600;
   color: rgba(255, 255, 255, 0.8);
-  font-family: var(--font-source-code-pro), monospace;
+  font-family: 'Share Tech Mono', monospace;
 }
 
 /* Whale Alerts */
@@ -195,7 +195,7 @@
   font-size: 0.85rem;
   font-weight: 600;
   color: rgba(255, 255, 255, 0.9);
-  font-family: var(--font-source-code-pro), monospace;
+  font-family: 'Share Tech Mono', monospace;
 }
 
 .whaleTime {

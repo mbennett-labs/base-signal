@@ -441,7 +441,7 @@ const fetchPrice = useCallback(async () => {
   };
 
   return (
-    <div style={{ minHeight: '100vh', background: theme.bg, color: theme.text, fontFamily: "'Rajdhani', system-ui, sans-serif", position: 'relative' }}>
+    <div className="app-root" style={{ minHeight: '100vh', background: theme.bg, color: theme.text, fontFamily: "'Rajdhani', system-ui, sans-serif", position: 'relative', overflowX: 'hidden' }}>
       {/* Background Effects */}
       <div style={{ position: 'fixed', inset: 0, pointerEvents: 'none', zIndex: 0 }}>
         <div style={{ position: 'absolute', left: -150, top: '50%', transform: 'translateY(-50%)', width: 400, height: 400, background: '#22c55e', borderRadius: '50%', filter: 'blur(150px)', opacity: 0.15 }} />
@@ -449,44 +449,46 @@ const fetchPrice = useCallback(async () => {
       </div>
 
       {/* Header */}
-      <header style={{ position: 'relative', zIndex: 10, display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px 20px', borderBottom: '1px solid ' + theme.border, background: isDarkMode ? 'rgba(10,10,15,0.9)' : 'rgba(255,255,255,0.95)', backdropFilter: 'blur(10px)', flexWrap: 'wrap', gap: 12 }}>
-        <div>
-          <h1 style={{ fontSize: 22, fontWeight: 900, fontFamily: "'Orbitron', sans-serif", letterSpacing: 2, margin: 0 }}>
+      <header className="app-header" style={{ position: 'relative', zIndex: 10, display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 16px', borderBottom: '1px solid ' + theme.border, background: isDarkMode ? 'rgba(10,10,15,0.9)' : 'rgba(255,255,255,0.95)', backdropFilter: 'blur(10px)', flexWrap: 'wrap', gap: 8 }}>
+        <div className="header-left">
+          <h1 style={{ fontSize: 20, fontWeight: 900, fontFamily: "'Orbitron', sans-serif", letterSpacing: 2, margin: 0 }}>
             <span style={{ color: '#facc15', textShadow: '0 0 20px rgba(250,204,21,0.5)' }}>BTC</span>
             <span style={{ marginLeft: 8 }}>BATTLE</span>
           </h1>
-          <span style={{ fontSize: 11, color: '#64748b', textTransform: 'uppercase', letterSpacing: 2 }}>Real-Time Whale War</span>
-        </div>
-        
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 16px', background: 'rgba(51,65,85,0.5)', borderRadius: 20, border: '1px solid rgba(255,255,255,0.1)' }}>
-          <span style={{ fontSize: 20 }}>{getWeatherIcon()}</span>
-          <span style={{ fontSize: 13, textTransform: 'uppercase' }}>{fearGreed.text}</span>
-          <span style={{ fontFamily: "'Share Tech Mono', monospace", fontWeight: 'bold', color: '#facc15' }}>{fearGreed.value}</span>
-          <span style={{ color: '#64748b', fontSize: 11 }}>/100</span>
+          <span className="header-subtitle" style={{ fontSize: 11, color: '#64748b', textTransform: 'uppercase', letterSpacing: 2 }}>Real-Time Whale War</span>
         </div>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-          <button onClick={() => setShowLegend(!showLegend)} style={{ fontSize: 11, padding: '6px 12px', background: '#334155', border: '1px solid #475569', borderRadius: 8, color: 'white', cursor: 'pointer' }}>
+        <div className="header-weather" style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '6px 12px', background: 'rgba(51,65,85,0.5)', borderRadius: 20, border: '1px solid rgba(255,255,255,0.1)', fontSize: 12 }}>
+          <span style={{ fontSize: 18 }}>{getWeatherIcon()}</span>
+          <span style={{ textTransform: 'uppercase' }}>{fearGreed.text}</span>
+          <span style={{ fontFamily: "'Share Tech Mono', monospace", fontWeight: 'bold', color: '#facc15' }}>{fearGreed.value}</span>
+          <span style={{ color: '#64748b', fontSize: 10 }}>/100</span>
+        </div>
+
+        <div className="header-actions" style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+          <button className="header-legend-btn" onClick={() => setShowLegend(!showLegend)} style={{ fontSize: 11, padding: '6px 10px', background: '#334155', border: '1px solid #475569', borderRadius: 8, color: 'white', cursor: 'pointer' }}>
             📖 {showLegend ? 'Hide' : 'Legend'}
           </button>
-          <button onClick={() => setIsDarkMode(!isDarkMode)} style={{ fontSize: 11, padding: '6px 12px', background: isDarkMode ? 'rgba(51,65,85,0.5)' : 'rgba(241,245,249,0.9)', border: '1px solid ' + theme.border, borderRadius: 8, color: theme.textSecondary, cursor: 'pointer' }}>
+          <button className="header-theme-btn" onClick={() => setIsDarkMode(!isDarkMode)} style={{ fontSize: 11, padding: '6px 10px', background: isDarkMode ? 'rgba(51,65,85,0.5)' : 'rgba(241,245,249,0.9)', border: '1px solid ' + theme.border, borderRadius: 8, color: theme.textSecondary, cursor: 'pointer' }}>
             {isDarkMode ? '☀️ Light' : '🌙 Dark'}
           </button>
-          <button onClick={async () => { try { await addFrame(); } catch(e) { console.error('Save app failed:', e); } }} style={{ fontSize: 11, padding: '6px 12px', background: 'rgba(0,82,255,0.2)', border: '1px solid rgba(0,82,255,0.4)', borderRadius: 8, color: '#5b9aff', cursor: 'pointer' }}>
+          <button className="header-save-btn" onClick={async () => { try { await addFrame(); } catch(e) { console.error('Save app failed:', e); } }} style={{ fontSize: 11, padding: '6px 10px', background: 'rgba(0,82,255,0.2)', border: '1px solid rgba(0,82,255,0.4)', borderRadius: 8, color: '#5b9aff', cursor: 'pointer' }}>
             Save App
           </button>
-          <span style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '4px 10px', fontSize: 11, fontWeight: 700, color: '#fff', background: 'rgba(0,82,255,0.2)', border: '1px solid rgba(0,82,255,0.35)', borderRadius: 20 }}>
+          <span className="header-base-badge" style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '4px 10px', fontSize: 11, fontWeight: 700, color: '#fff', background: 'rgba(0,82,255,0.2)', border: '1px solid rgba(0,82,255,0.35)', borderRadius: 20 }}>
             <svg width="14" height="14" viewBox="0 0 111 111" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="55.5" cy="55.5" r="55.5" fill="#0052FF"/><path d="M55.4 93.3c20.9 0 37.9-17 37.9-37.9S76.3 17.5 55.4 17.5c-19.5 0-35.6 14.8-37.6 33.8h49.8v11.2H17.8c2 19 18.1 30.8 37.6 30.8z" fill="white"/></svg>
-            Base
+            <span className="header-base-text">Base</span>
           </span>
-          <Wallet>
-            <ConnectWallet><Avatar /><Name /></ConnectWallet>
-            <WalletDropdown>
-              <Identity hasCopyAddressOnClick><Avatar /><Name /><Address /></Identity>
-              <WalletDropdownDisconnect />
-            </WalletDropdown>
-          </Wallet>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 11, color: theme.textMuted }}>
+          <div className="wallet-compact">
+            <Wallet>
+              <ConnectWallet><Avatar /><span className="wallet-name"><Name /></span></ConnectWallet>
+              <WalletDropdown>
+                <Identity hasCopyAddressOnClick><Avatar /><Name /><Address /></Identity>
+                <WalletDropdownDisconnect />
+              </WalletDropdown>
+            </Wallet>
+          </div>
+          <div className="header-live" style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 11, color: theme.textMuted }}>
             <span style={{ width: 8, height: 8, background: '#4ade80', borderRadius: '50%', animation: 'pulse 1.5s ease-in-out infinite' }} />
             LIVE
           </div>
@@ -494,7 +496,7 @@ const fetchPrice = useCallback(async () => {
       </header>
 
       {/* Tab Navigation */}
-      <div style={{ display: 'flex', justifyContent: 'center', gap: 6, padding: '12px 16px', background: isDarkMode ? 'rgba(15,23,42,0.8)' : 'rgba(241,245,249,0.95)', borderBottom: '1px solid ' + theme.border, position: 'relative', zIndex: 10 }}>
+      <div className="tab-nav" style={{ display: 'flex', justifyContent: 'center', gap: 4, padding: '10px 16px', background: isDarkMode ? 'rgba(15,23,42,0.8)' : 'rgba(241,245,249,0.95)', borderBottom: '1px solid ' + theme.border, position: 'relative', zIndex: 10 }}>
         {[
           { id: 'battle', label: '⚔️ Battle', desc: 'Live War' },
           { id: 'news', label: '📰 News', desc: 'Crypto Intel' },
@@ -518,14 +520,14 @@ const fetchPrice = useCallback(async () => {
       </div>
 
       {/* Main Content */}
-      <main style={{ position: 'relative', zIndex: 10, padding: '20px' }}>
+      <main className="app-main" style={{ position: 'relative', zIndex: 10, padding: '16px' }}>
         
         {/* BATTLE TAB */}
         {activeTab === 'battle' && (
           <>
             {/* Price Display */}
             <div style={{ textAlign: 'center', marginBottom: 20 }}>
-              <div style={{ fontSize: 52, fontWeight: 900, fontFamily: "'Orbitron', sans-serif", letterSpacing: 2, color: priceFlash === 'green' ? '#4ade80' : priceFlash === 'red' ? '#f87171' : 'white' }}>
+              <div className="price-display" style={{ fontSize: 40, fontWeight: 900, fontFamily: "'Orbitron', sans-serif", letterSpacing: 1, color: priceFlash === 'green' ? '#4ade80' : priceFlash === 'red' ? '#f87171' : 'white' }}>
                 {price === 0 ? '...' : formatPrice(price)}
               </div>
               <div style={{ fontSize: 18, fontFamily: "'Share Tech Mono', monospace", color: priceChange >= 0 ? '#4ade80' : '#f87171' }}>
@@ -536,7 +538,7 @@ const fetchPrice = useCallback(async () => {
 
             {/* Tug of War */}
             <div style={{ background: isDarkMode ? 'rgba(30,41,59,0.5)' : 'rgba(241,245,249,0.8)', borderRadius: 16, border: '1px solid ' + theme.border, padding: 20, marginBottom: 20 }}>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.5fr 1fr', gap: 20, alignItems: 'center' }}>
+              <div className="tow-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1.5fr 1fr', gap: 16, alignItems: 'center' }}>
                 {/* Bull Side */}
                 <div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
@@ -560,7 +562,7 @@ const fetchPrice = useCallback(async () => {
                     <span style={{ color: '#f87171' }}>BEAR ZONE →</span>
                   </div>
                   <div style={{ position: 'relative', height: 16, background: 'linear-gradient(90deg, #22c55e, #facc15, #ef4444)', borderRadius: 8, boxShadow: '0 0 20px rgba(250,204,21,0.3)' }}>
-                    <div style={{ position: 'absolute', top: '50%', left: tugPosition + '%', transform: 'translate(-50%, -50%)', width: 48, height: 48, background: '#0f172a', border: '3px solid #facc15', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 0 20px rgba(250,204,21,0.5)', transition: 'left 0.5s' }}>
+                    <div className="tow-circle" style={{ position: 'absolute', top: '50%', left: tugPosition + '%', transform: 'translate(-50%, -50%)', width: 40, height: 40, background: '#0f172a', border: '2px solid #facc15', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 0 20px rgba(250,204,21,0.5)', transition: 'left 0.5s' }}>
                       <span style={{ fontSize: 9, fontFamily: "'Share Tech Mono', monospace", fontWeight: 'bold' }}>{price === 0 ? '...' : formatPrice(price).slice(0, 6)}</span>
                     </div>
                   </div>
@@ -591,7 +593,7 @@ const fetchPrice = useCallback(async () => {
               <h3 style={{ fontSize: 12, fontWeight: 'bold', color: '#64748b', textTransform: 'uppercase', letterSpacing: 2, marginBottom: 12 }}>
                 🐋 Whale Movements <span style={{ fontWeight: 'normal', fontSize: 10 }}>(100+ BTC)</span>
               </h3>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 8 }}>
+              <div className="whale-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 8 }}>
                 {whaleAlerts.slice(0, 6).map((alert) => (
                   <div key={alert.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: 12, background: alert.type === 'buy' ? 'rgba(34,197,94,0.1)' : 'rgba(239,68,68,0.1)', borderRadius: 8, borderLeft: '3px solid ' + (alert.type === 'buy' ? '#4ade80' : '#f87171') }}>
                     <span>{alert.type === 'buy' ? '🟢' : '🔴'}</span>
@@ -883,7 +885,7 @@ const fetchPrice = useCallback(async () => {
       </main>
 
       {/* Stats Footer */}
-      <footer style={{ position: 'relative', zIndex: 10, display: 'flex', justifyContent: 'center', gap: 24, padding: '16px 20px', borderTop: '1px solid ' + theme.border, background: isDarkMode ? 'rgba(10,10,15,0.95)' : 'rgba(255,255,255,0.95)', flexWrap: 'wrap' }}>
+      <footer className="app-footer" style={{ position: 'relative', zIndex: 10, display: 'flex', justifyContent: 'center', gap: 16, padding: '12px 16px', borderTop: '1px solid ' + theme.border, background: isDarkMode ? 'rgba(10,10,15,0.95)' : 'rgba(255,255,255,0.95)', flexWrap: 'wrap' }}>
         {isConnected && address && (
           <div style={{ textAlign: 'center' }}>
             <div style={{ fontSize: 9, color: theme.textMuted, textTransform: 'uppercase', letterSpacing: 1 }}>Wallet</div>
@@ -917,7 +919,7 @@ const fetchPrice = useCallback(async () => {
       </footer>
 
       {/* Tip the Builder */}
-      <div style={{ textAlign: 'center', padding: '16px 20px', background: isDarkMode ? 'rgba(250,204,21,0.05)' : 'rgba(250,204,21,0.1)', borderTop: '1px solid rgba(250,204,21,0.2)', position: 'relative', zIndex: 10 }}>
+      <div className="tip-section" style={{ textAlign: 'center', padding: '12px 16px', background: isDarkMode ? 'rgba(250,204,21,0.05)' : 'rgba(250,204,21,0.1)', borderTop: '1px solid rgba(250,204,21,0.2)', position: 'relative', zIndex: 10 }}>
         <div style={{ fontSize: 12, color: '#facc15', marginBottom: 10, fontWeight: 'bold' }}>☕ Tip the Builder</div>
         <Transaction key={`tip-${tipKey}`} chainId={base.id} calls={tipCalls} isSponsored onSuccess={() => { console.log('Tip sent!'); setTipKey((k) => k + 1); }} onError={(err) => console.error('Tip failed:', err)}>
           <TransactionButton text="Tip the Builder (1 USDC)" />
@@ -926,7 +928,7 @@ const fetchPrice = useCallback(async () => {
         <div style={{ fontSize: 9, color: theme.textMuted, marginTop: 6 }}>Gasless via CDP Paymaster on Base</div>
       </div>
 
-      <div style={{ textAlign: 'center', padding: 8, fontSize: 10, color: theme.textMuted, position: 'relative', zIndex: 10 }}>
+      <div className="app-credits" style={{ textAlign: 'center', padding: 8, fontSize: 10, color: theme.textMuted, position: 'relative', zIndex: 10 }}>
         Data: CoinGecko • Fear & Greed: Alternative.me • TA: Claude AI • Built by QuantumShieldLabs
       </div>
 
@@ -991,7 +993,123 @@ const fetchPrice = useCallback(async () => {
         </div>
       )}
 
-      <style>{`@keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } } @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }`}</style>
+      <style>{`
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+
+        /* Global box-sizing */
+        *, *::before, *::after { box-sizing: border-box; }
+
+        /* Safe area insets */
+        .app-root {
+          max-width: 100vw;
+          padding-top: env(safe-area-inset-top);
+        }
+        .app-header {
+          padding-left: max(16px, env(safe-area-inset-left)) !important;
+          padding-right: max(16px, env(safe-area-inset-right)) !important;
+        }
+        .tab-nav {
+          padding-left: max(16px, env(safe-area-inset-left)) !important;
+          padding-right: max(16px, env(safe-area-inset-right)) !important;
+        }
+        .app-main {
+          padding-left: max(16px, env(safe-area-inset-left)) !important;
+          padding-right: max(16px, env(safe-area-inset-right)) !important;
+        }
+        .app-footer {
+          padding-left: max(16px, env(safe-area-inset-left)) !important;
+          padding-right: max(16px, env(safe-area-inset-right)) !important;
+        }
+        .tip-section {
+          padding-left: max(16px, env(safe-area-inset-left)) !important;
+          padding-right: max(16px, env(safe-area-inset-right)) !important;
+        }
+        .app-credits {
+          padding-bottom: max(8px, env(safe-area-inset-bottom)) !important;
+        }
+
+        /* Wallet compact wrapper */
+        .wallet-compact {
+          max-width: 180px;
+          overflow: hidden;
+          flex-shrink: 0;
+        }
+
+        /* Tablet and below (768px) */
+        @media (max-width: 768px) {
+          .tow-grid {
+            grid-template-columns: 1fr !important;
+            gap: 12px !important;
+          }
+          .whale-grid {
+            grid-template-columns: 1fr !important;
+          }
+          .header-weather {
+            display: none !important;
+          }
+          .header-legend-btn,
+          .header-theme-btn {
+            display: none !important;
+          }
+        }
+
+        /* Mobile (480px and below) */
+        @media (max-width: 480px) {
+          .header-subtitle {
+            display: none !important;
+          }
+          .header-live {
+            display: none !important;
+          }
+          .wallet-name {
+            display: none !important;
+          }
+          .wallet-compact {
+            max-width: 44px;
+          }
+          .header-base-text {
+            display: none !important;
+          }
+          .header-base-badge {
+            padding: 4px 6px !important;
+          }
+          .header-save-btn {
+            padding: 6px 8px !important;
+            font-size: 10px !important;
+          }
+          .price-display {
+            font-size: 32px !important;
+            letter-spacing: 0 !important;
+          }
+          .tow-circle {
+            width: 32px !important;
+            height: 32px !important;
+          }
+          .tow-circle span {
+            font-size: 7px !important;
+          }
+          .app-footer {
+            gap: 10px !important;
+          }
+        }
+
+        /* Very small screens (360px) */
+        @media (max-width: 360px) {
+          .price-display {
+            font-size: 28px !important;
+          }
+          .header-save-btn {
+            display: none !important;
+          }
+          .tab-nav button {
+            padding: 6px 8px !important;
+          }
+          .tab-nav button div:last-child {
+            display: none !important;
+          }
+        }
+      `}</style>
     </div>
   );
 }

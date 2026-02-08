@@ -3,12 +3,17 @@
   align-items: center;
   justify-content: space-between;
   padding: 0.75rem 1rem;
+  padding-top: max(0.75rem, env(safe-area-inset-top));
+  padding-left: max(1rem, env(safe-area-inset-left));
+  padding-right: max(1rem, env(safe-area-inset-right));
   background: rgba(0, 0, 0, 0.3);
   backdrop-filter: blur(12px);
   border-bottom: 1px solid rgba(255, 255, 255, 0.08);
   position: sticky;
   top: 0;
   z-index: 100;
+  gap: 0.5rem;
+  flex-wrap: wrap;
 }
 
 .logo {
@@ -72,4 +77,25 @@
   border-radius: 20px;
   white-space: nowrap;
   letter-spacing: 0.02em;
+}
+
+/* Wallet overflow control */
+.actions :global(.ock-ConnectWallet_Container) {
+  max-width: 160px;
+  overflow: hidden;
+}
+
+@media (max-width: 480px) {
+  .title {
+    font-size: 0.95rem;
+  }
+
+  .saveButton {
+    padding: 0.3rem 0.5rem;
+    font-size: 0.7rem;
+  }
+
+  .actions :global(.ock-ConnectWallet_Container) {
+    max-width: 44px;
+  }
 }

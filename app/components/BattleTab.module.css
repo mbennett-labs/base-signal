@@ -1,0 +1,232 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+/* Price Card */
+.priceCard {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 16px;
+  padding: 1.25rem;
+}
+
+.priceHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.75rem;
+}
+
+.priceCoin {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 600;
+  font-size: 0.95rem;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.btcIcon {
+  font-size: 1.3rem;
+  color: #f7931a;
+}
+
+.priceBadge {
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #22c55e;
+  background: rgba(34, 197, 94, 0.12);
+  padding: 0.2rem 0.5rem;
+  border-radius: 4px;
+  animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+.priceValue {
+  font-size: 2.25rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: white;
+  margin-bottom: 0.25rem;
+}
+
+.priceLoading,
+.priceError {
+  font-size: 0.9rem;
+  color: rgba(255, 255, 255, 0.5);
+  padding: 1rem 0;
+}
+
+.priceError {
+  color: #ef4444;
+}
+
+.changePositive {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #22c55e;
+  margin-bottom: 1rem;
+}
+
+.changeNegative {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #ef4444;
+  margin-bottom: 1rem;
+}
+
+.priceStats {
+  display: flex;
+  gap: 1.5rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  padding-top: 0.75rem;
+}
+
+.stat {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.statLabel {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: rgba(255, 255, 255, 0.4);
+}
+
+.statValue {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.8);
+  font-family: var(--font-source-code-pro), monospace;
+}
+
+/* Whale Alerts */
+.whaleSection {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 16px;
+  padding: 1.25rem;
+}
+
+.sectionHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.75rem;
+}
+
+.sectionTitle {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.sectionBadge {
+  font-size: 0.7rem;
+  color: rgba(255, 255, 255, 0.4);
+}
+
+.whaleList {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.whaleCard {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 10px;
+  padding: 0.65rem 0.75rem;
+  transition: background 0.15s ease;
+}
+
+.whaleCard:hover {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.whaleTop {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.3rem;
+}
+
+.typeBuy {
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: #22c55e;
+  background: rgba(34, 197, 94, 0.12);
+  padding: 0.15rem 0.4rem;
+  border-radius: 3px;
+}
+
+.typeSell {
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: #ef4444;
+  background: rgba(239, 68, 68, 0.12);
+  padding: 0.15rem 0.4rem;
+  border-radius: 3px;
+}
+
+.typeTransfer {
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: #a78bfa;
+  background: rgba(167, 139, 250, 0.12);
+  padding: 0.15rem 0.4rem;
+  border-radius: 3px;
+}
+
+.whaleAmount {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.9);
+  font-family: var(--font-source-code-pro), monospace;
+}
+
+.whaleTime {
+  font-size: 0.7rem;
+  color: rgba(255, 255, 255, 0.3);
+  margin-left: auto;
+}
+
+.whaleRoute {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.4);
+}
+
+.whaleArrow {
+  color: rgba(255, 255, 255, 0.2);
+}
+
+/* Tip Section */
+.tipSection {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 16px;
+  padding: 1.25rem;
+  text-align: center;
+}
+
+.tipLabel {
+  font-size: 0.8rem;
+  color: rgba(255, 255, 255, 0.5);
+  margin-bottom: 0.75rem;
+}

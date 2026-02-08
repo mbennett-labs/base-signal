@@ -1,0 +1,17 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(dir:*)",
+      "Bash(npx next build:*)",
+      "Bash(where:*)",
+      "Bash(cd:*)",
+      "Bash(\"C:\\\\Program Files\\\\nodejs\\\\npx.cmd\" next build)",
+      "Bash(node --version:*)",
+      "Bash(node node_modules/.bin/next build:*)",
+      "Bash(node:*)",
+      "Bash(git status:*)",
+      "Bash(git add:*)",
+      "Bash(git commit -m \"$\\(cat <<''EOF''\nUpgrade to full Base Mini App with BTC Battle dashboard\n\nReplace waitlist page with tabbed dashboard featuring real-time BTC\nprice tracking \\(CoinGecko\\), whale alerts, and Farcaster integration.\nAdd Smart Wallet \\(OnchainKit\\), gasless \"Tip the Builder\" \\(1 USDC via\nCDP Paymaster\\), \"Save App\" \\(useAddFrame\\), \"Share Battle\" \\(composeCast\\),\nand wallet address display in footer. Update manifest metadata for\nBTC Battle branding.\n\nCo-Authored-By: Claude Opus 4.6 <noreply@anthropic.com>\nEOF\n\\)\")"
+    ]
+  }
+}

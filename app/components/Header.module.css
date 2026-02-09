@@ -79,71 +79,10 @@
   letter-spacing: 0.02em;
 }
 
-/* Wallet overflow control (desktop only) */
-.actions :global(.ock-ConnectWallet_Container) {
+/* Wallet wrapper - desktop: normal, mobile: scale down to fit */
+.walletWrapper {
   max-width: 160px;
   overflow: hidden;
-}
-
-/* Mobile custom wallet button */
-.mobileWalletWrap {
-  position: relative;
-}
-
-.mobileWalletBtn {
-  padding: 0.35rem 0.75rem;
-  font-size: 0.75rem;
-  font-weight: 600;
-  font-family: 'Share Tech Mono', monospace;
-  color: #fff;
-  background: rgba(0, 82, 255, 0.2);
-  border: 1px solid rgba(0, 82, 255, 0.4);
-  border-radius: 20px;
-  cursor: pointer;
-  white-space: nowrap;
-  transition: background 0.2s ease;
-}
-
-.mobileWalletBtn:active {
-  transform: scale(0.96);
-}
-
-.mobileWalletMenu {
-  position: absolute;
-  top: calc(100% + 6px);
-  right: 0;
-  background: rgba(20, 20, 30, 0.95);
-  backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 10px;
-  padding: 0.5rem;
-  min-width: 140px;
-  z-index: 200;
-}
-
-.mobileWalletAddr {
-  padding: 0.35rem 0.5rem;
-  font-size: 0.7rem;
-  color: rgba(255, 255, 255, 0.6);
-  font-family: 'Share Tech Mono', monospace;
-}
-
-.mobileDisconnectBtn {
-  width: 100%;
-  padding: 0.4rem 0.5rem;
-  font-size: 0.75rem;
-  font-weight: 600;
-  color: #ff6b6b;
-  background: rgba(255, 100, 100, 0.1);
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
-  text-align: left;
-  transition: background 0.15s ease;
-}
-
-.mobileDisconnectBtn:hover {
-  background: rgba(255, 100, 100, 0.2);
 }
 
 @media (max-width: 639px) {
@@ -154,5 +93,12 @@
   .saveButton {
     padding: 0.3rem 0.5rem;
     font-size: 0.7rem;
+  }
+
+  .walletWrapper {
+    transform: scale(0.7);
+    transform-origin: top right;
+    max-width: none;
+    overflow: visible;
   }
 }

@@ -1,5 +1,4 @@
 "use client";
-import { useState, useEffect, useCallback } from "react";
 import { useAddFrame } from "@coinbase/onchainkit/minikit";
 import {
   ConnectWallet,
@@ -13,71 +12,10 @@ import {
   Name,
   Identity,
 } from "@coinbase/onchainkit/identity";
-import { useAccount, useConnect, useDisconnect } from "wagmi";
 import styles from "./Header.module.css";
-
-function MobileWallet() {
-  const { address, isConnected } = useAccount();
-  const { connectors, connect } = useConnect();
-  const { disconnect } = useDisconnect();
-  const [showMenu, setShowMenu] = useState(false);
-
-  const handleConnect = useCallback(() => {
-    const connector = connectors[0];
-    if (connector) {
-      connect({ connector });
-    }
-  }, [connectors, connect]);
-
-  const truncatedAddress = address
-    ? `${address.slice(0, 4)}...${address.slice(-4)}`
-    : "";
-
-  if (!isConnected) {
-    return (
-      <button className={styles.mobileWalletBtn} onClick={handleConnect}>
-        Connect
-      </button>
-    );
-  }
-
-  return (
-    <div className={styles.mobileWalletWrap}>
-      <button
-        className={styles.mobileWalletBtn}
-        onClick={() => setShowMenu((v) => !v)}
-      >
-        {truncatedAddress}
-      </button>
-      {showMenu && (
-        <div className={styles.mobileWalletMenu}>
-          <div className={styles.mobileWalletAddr}>{truncatedAddress}</div>
-          <button
-            className={styles.mobileDisconnectBtn}
-            onClick={() => {
-              disconnect();
-              setShowMenu(false);
-            }}
-          >
-            Disconnect
-          </button>
-        </div>
-      )}
-    </div>
-  );
-}
 
 export function Header() {
   const addFrame = useAddFrame();
-  const [isMobile, setIsMobile] = useState(false);
-
-  useEffect(() => {
-    const mq = window.matchMedia("(max-width: 639px)");
-    setIsMobile(mq.matches);
-    const handler = (e: MediaQueryListEvent) => setIsMobile(e.matches);
-    mq.addEventListener("change", handler);
-    return () => mq.removeEventListener("change", handler);
-  }, []);
 
   const handleSaveApp = async () => {
     try {
@@ -104,9 +42,7 @@ export function Header() {
           </svg>
           Base
         </span>
-        {isMobile ? (
-          <MobileWallet />
-        ) : (
+        <div className={styles.walletWrapper}>
           <Wallet>
             <ConnectWallet>
               <Avatar />
@@ -121,7 +57,7 @@ export function Header() {
               <WalletDropdownDisconnect />
             </WalletDropdown>
           </Wallet>
-        )}
+        </div>
       </div>
     </header>
   );

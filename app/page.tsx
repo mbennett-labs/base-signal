@@ -493,26 +493,23 @@ const fetchPrice = useCallback(async () => {
           </span>
           <div className="wallet-mobile" style={{ position: 'relative' }}>
             {isConnected ? (
-              <button onClick={() => disconnect()} style={{ padding: '6px 10px', fontSize: 11, fontWeight: 600, background: 'rgba(34,197,94,0.15)', color: '#4ade80', border: '1px solid rgba(34,197,94,0.3)', borderRadius: 8, cursor: 'pointer', whiteSpace: 'nowrap', fontFamily: "'Share Tech Mono', monospace" }}>
+              <button onTouchEnd={(e) => { e.preventDefault(); disconnect(); }} onClick={() => disconnect()} style={{ padding: '6px 10px', fontSize: 11, fontWeight: 600, background: 'rgba(34,197,94,0.15)', color: '#4ade80', border: '1px solid rgba(34,197,94,0.3)', borderRadius: 8, cursor: 'pointer', whiteSpace: 'nowrap', fontFamily: "'Share Tech Mono', monospace" }}>
                 {address?.slice(0, 6)}...{address?.slice(-4)}
               </button>
             ) : (
               <>
-                <button onClick={() => setShowWalletPicker(!showWalletPicker)} style={{ padding: '6px 10px', fontSize: 11, fontWeight: 600, background: 'rgba(0,82,255,0.2)', color: '#5b9aff', border: '1px solid rgba(0,82,255,0.4)', borderRadius: 8, cursor: 'pointer', whiteSpace: 'nowrap' }}>
+                <button onTouchEnd={(e) => { e.preventDefault(); if (connectors.length === 1) { connect({ connector: connectors[0] }); } else { setShowWalletPicker(v => !v); } }} onClick={() => { if (connectors.length === 1) { connect({ connector: connectors[0] }); } else { setShowWalletPicker(v => !v); } }} style={{ padding: '6px 10px', fontSize: 11, fontWeight: 600, background: 'rgba(0,82,255,0.2)', color: '#5b9aff', border: '1px solid rgba(0,82,255,0.4)', borderRadius: 8, cursor: 'pointer', whiteSpace: 'nowrap' }}>
                   Connect
                 </button>
-                {showWalletPicker && (
-                  <>
-                    <div className="wallet-picker-backdrop" onClick={() => setShowWalletPicker(false)} />
-                    <div className="wallet-picker">
-                      {connectors.map((c) => (
-                        <button key={c.uid} onClick={() => { connect({ connector: c }); setShowWalletPicker(false); }} className="wallet-picker-item">
-                          {c.icon && <img src={c.icon} alt="" width={20} height={20} style={{ borderRadius: 4 }} />}
-                          <span>{c.name}</span>
-                        </button>
-                      ))}
-                    </div>
-                  </>
+                {showWalletPicker && connectors.length > 1 && (
+                  <div style={{ position: 'absolute', top: '100%', right: 0, marginTop: 4, zIndex: 200, minWidth: 170, background: '#0f172a', border: '1px solid #334155', borderRadius: 8, padding: 4 }}>
+                    {connectors.map((c) => (
+                      <button key={c.uid} onTouchEnd={(e) => { e.preventDefault(); connect({ connector: c }); setShowWalletPicker(false); }} onClick={() => { connect({ connector: c }); setShowWalletPicker(false); }} style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', padding: '10px 12px', fontSize: 13, color: '#e2e8f0', background: 'none', border: 'none', borderRadius: 6, cursor: 'pointer', textAlign: 'left' }}>
+                        {c.icon && <img src={c.icon} alt="" width={20} height={20} style={{ borderRadius: 4 }} />}
+                        {c.name}
+                      </button>
+                    ))}
+                  </div>
                 )}
               </>
             )}
@@ -1064,45 +1061,6 @@ const fetchPrice = useCallback(async () => {
         @media (max-width: 639px) {
           .wallet-desktop { display: none !important; }
           .wallet-mobile { display: block !important; position: relative; }
-        }
-        .wallet-picker-backdrop {
-          position: fixed;
-          inset: 0;
-          z-index: 199;
-        }
-        .wallet-picker {
-          position: absolute;
-          top: calc(100% + 6px);
-          right: 0;
-          z-index: 200;
-          min-width: 180px;
-          background: rgba(15, 23, 42, 0.97);
-          border: 1px solid rgba(255,255,255,0.12);
-          border-radius: 10px;
-          padding: 4px;
-          backdrop-filter: blur(16px);
-          box-shadow: 0 8px 24px rgba(0,0,0,0.5);
-        }
-        .wallet-picker-item {
-          display: flex;
-          align-items: center;
-          gap: 8px;
-          width: 100%;
-          padding: 10px 12px;
-          font-size: 13px;
-          font-weight: 500;
-          color: #e2e8f0;
-          background: transparent;
-          border: none;
-          border-radius: 8px;
-          cursor: pointer;
-          text-align: left;
-        }
-        .wallet-picker-item:hover {
-          background: rgba(255,255,255,0.08);
-        }
-        .wallet-picker-item:active {
-          background: rgba(0,82,255,0.2);
         }
 
         /* Tablet and below (768px) */

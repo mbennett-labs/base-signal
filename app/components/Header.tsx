@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useAddFrame } from "@coinbase/onchainkit/minikit";
 import {
   ConnectWallet,
@@ -13,7 +13,59 @@ import {
   Name,
   Identity,
 } from "@coinbase/onchainkit/identity";
+import { useAccount, useConnect, useDisconnect } from "wagmi";
 import styles from "./Header.module.css";
+
+function MobileWallet() {
+  const { address, isConnected } = useAccount();
+  const { connectors, connect } = useConnect();
+  const { disconnect } = useDisconnect();
+  const [showMenu, setShowMenu] = useState(false);
+
+  const handleConnect = useCallback(() => {
+    const connector = connectors[0];
+    if (connector) {
+      connect({ connector });
+    }
+  }, [connectors, connect]);
+
+  const truncatedAddress = address
+    ? `${address.slice(0, 4)}...${address.slice(-4)}`
+    : "";
+
+  if (!isConnected) {
+    return (
+      <button className={styles.mobileWalletBtn} onClick={handleConnect}>
+        Connect
+      </button>
+    );
+  }
+
+  return (
+    <div className={styles.mobileWalletWrap}>
+      <button
+        className={styles.mobileWalletBtn}
+        onClick={() => setShowMenu((v) => !v)}
+      >
+        {truncatedAddress}
+      </button>
+      {showMenu && (
+        <div className={styles.mobileWalletMenu}>
+          <div className={styles.mobileWalletAddr}>{truncatedAddress}</div>
+          <button
+            className={styles.mobileDisconnectBtn}
+            onClick={() => {
+              disconnect();
+              setShowMenu(false);
+            }}
+          >
+            Disconnect
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
 
 export function Header() {
   const addFrame = useAddFrame();
@@ -52,20 +104,24 @@ export function Header() {
           </svg>
           Base
         </span>
-        <Wallet>
-          <ConnectWallet disconnectedLabel={isMobile ? "Connect" : undefined}>
-            <Avatar />
-            {!isMobile && <Name />}
-          </ConnectWallet>
-          <WalletDropdown>
-            <Identity hasCopyAddressOnClick>
+        {isMobile ? (
+          <MobileWallet />
+        ) : (
+          <Wallet>
+            <ConnectWallet>
               <Avatar />
               <Name />
-              <Address />
-            </Identity>
-            <WalletDropdownDisconnect />
-          </WalletDropdown>
-        </Wallet>
+            </ConnectWallet>
+            <WalletDropdown>
+              <Identity hasCopyAddressOnClick>
+                <Avatar />
+                <Name />
+                <Address />
+              </Identity>
+              <WalletDropdownDisconnect />
+            </WalletDropdown>
+          </Wallet>
+        )}
       </div>
     </header>
   );

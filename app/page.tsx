@@ -6,7 +6,7 @@ import { useMiniKit, useAddFrame, useComposeCast } from '@coinbase/onchainkit/mi
 import { Transaction, TransactionButton, TransactionToast, TransactionToastIcon, TransactionToastLabel, TransactionToastAction } from '@coinbase/onchainkit/transaction';
 import { ConnectWallet, Wallet, WalletDropdown, WalletDropdownDisconnect } from '@coinbase/onchainkit/wallet';
 import { Address, Avatar, Name, Identity } from '@coinbase/onchainkit/identity';
-import { useAccount } from 'wagmi';
+import { useAccount, useConnect, useDisconnect } from 'wagmi';
 import { encodeFunctionData } from 'viem';
 import { base } from 'wagmi/chains';
 
@@ -133,6 +133,8 @@ export default function BTCBattle() {
   const addFrame = useAddFrame();
   const { composeCastAsync } = useComposeCast();
   const { address, isConnected } = useAccount();
+  const { connect, connectors } = useConnect();
+  const { disconnect } = useDisconnect();
 
   const tipCalls = useMemo(() => [{
     to: USDC_BASE,
@@ -479,15 +481,24 @@ const fetchPrice = useCallback(async () => {
             <svg width="14" height="14" viewBox="0 0 111 111" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="55.5" cy="55.5" r="55.5" fill="#0052FF"/><path d="M55.4 93.3c20.9 0 37.9-17 37.9-37.9S76.3 17.5 55.4 17.5c-19.5 0-35.6 14.8-37.6 33.8h49.8v11.2H17.8c2 19 18.1 30.8 37.6 30.8z" fill="white"/></svg>
             <span className="header-base-text">Base</span>
           </span>
-          <div className="wallet-compact">
+          <span className="wallet-desktop">
             <Wallet>
-              <ConnectWallet><Avatar /><span className="wallet-name"><Name /></span></ConnectWallet>
+              <ConnectWallet><Avatar /><Name /></ConnectWallet>
               <WalletDropdown>
                 <Identity hasCopyAddressOnClick><Avatar /><Name /><Address /></Identity>
                 <WalletDropdownDisconnect />
               </WalletDropdown>
             </Wallet>
-          </div>
+          </span>
+          {isConnected ? (
+            <button className="wallet-mobile" onClick={() => disconnect()} style={{ padding: '6px 10px', fontSize: 11, fontWeight: 600, background: 'rgba(34,197,94,0.15)', color: '#4ade80', border: '1px solid rgba(34,197,94,0.3)', borderRadius: 8, cursor: 'pointer', whiteSpace: 'nowrap', fontFamily: "'Share Tech Mono', monospace" }}>
+              {address?.slice(0, 6)}...{address?.slice(-4)}
+            </button>
+          ) : (
+            <button className="wallet-mobile" onClick={() => connectors[0] && connect({ connector: connectors[0] })} style={{ padding: '6px 10px', fontSize: 11, fontWeight: 600, background: 'rgba(0,82,255,0.2)', color: '#5b9aff', border: '1px solid rgba(0,82,255,0.4)', borderRadius: 8, cursor: 'pointer', whiteSpace: 'nowrap' }}>
+              Connect
+            </button>
+          )}
           <div className="header-live" style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 11, color: theme.textMuted }}>
             <span style={{ width: 8, height: 8, background: '#4ade80', borderRadius: '50%', animation: 'pulse 1.5s ease-in-out infinite' }} />
             LIVE
@@ -1029,11 +1040,12 @@ const fetchPrice = useCallback(async () => {
           padding-bottom: max(8px, env(safe-area-inset-bottom)) !important;
         }
 
-        /* Wallet compact wrapper */
-        .wallet-compact {
-          max-width: 180px;
-          overflow: hidden;
-          flex-shrink: 0;
+        /* Wallet: OnchainKit on desktop, custom button on mobile */
+        .wallet-desktop { display: inline-flex; }
+        .wallet-mobile { display: none !important; }
+        @media (max-width: 639px) {
+          .wallet-desktop { display: none !important; }
+          .wallet-mobile { display: inline-flex !important; }
         }
 
         /* Tablet and below (768px) */
@@ -1061,12 +1073,6 @@ const fetchPrice = useCallback(async () => {
           }
           .header-live {
             display: none !important;
-          }
-          .wallet-name {
-            display: none !important;
-          }
-          .wallet-compact {
-            max-width: 44px;
           }
           .header-base-text {
             display: none !important;

@@ -78,27 +78,3 @@
   white-space: nowrap;
   letter-spacing: 0.02em;
 }
-
-/* Wallet wrapper - desktop: normal, mobile: scale down to fit */
-.walletWrapper {
-  max-width: 160px;
-  overflow: hidden;
-}
-
-@media (max-width: 639px) {
-  .title {
-    font-size: 0.95rem;
-  }
-
-  .saveButton {
-    padding: 0.3rem 0.5rem;
-    font-size: 0.7rem;
-  }
-
-  .walletWrapper {
-    transform: scale(0.7);
-    transform-origin: top right;
-    max-width: none;
-    overflow: visible;
-  }
-}

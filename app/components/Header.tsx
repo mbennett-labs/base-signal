@@ -42,22 +42,20 @@ export function Header() {
           </svg>
           Base
         </span>
-        <div className={styles.walletWrapper}>
-          <Wallet>
-            <ConnectWallet>
+        <Wallet>
+          <ConnectWallet>
+            <Avatar />
+            <Name />
+          </ConnectWallet>
+          <WalletDropdown>
+            <Identity hasCopyAddressOnClick>
               <Avatar />
               <Name />
-            </ConnectWallet>
-            <WalletDropdown>
-              <Identity hasCopyAddressOnClick>
-                <Avatar />
-                <Name />
-                <Address />
-              </Identity>
-              <WalletDropdownDisconnect />
-            </WalletDropdown>
-          </Wallet>
-        </div>
+              <Address />
+            </Identity>
+            <WalletDropdownDisconnect />
+          </WalletDropdown>
+        </Wallet>
       </div>
     </header>
   );

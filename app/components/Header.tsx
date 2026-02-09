@@ -1,4 +1,5 @@
 "use client";
+import { useState, useEffect } from "react";
 import { useAddFrame } from "@coinbase/onchainkit/minikit";
 import {
   ConnectWallet,
@@ -16,6 +17,15 @@ import styles from "./Header.module.css";
 
 export function Header() {
   const addFrame = useAddFrame();
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const mq = window.matchMedia("(max-width: 639px)");
+    setIsMobile(mq.matches);
+    const handler = (e: MediaQueryListEvent) => setIsMobile(e.matches);
+    mq.addEventListener("change", handler);
+    return () => mq.removeEventListener("change", handler);
+  }, []);
 
   const handleSaveApp = async () => {
     try {
@@ -43,9 +53,9 @@ export function Header() {
           Base
         </span>
         <Wallet>
-          <ConnectWallet>
+          <ConnectWallet disconnectedLabel={isMobile ? "Connect" : undefined}>
             <Avatar />
-            <Name />
+            {!isMobile && <Name />}
           </ConnectWallet>
           <WalletDropdown>
             <Identity hasCopyAddressOnClick>

@@ -85,7 +85,7 @@
   overflow: hidden;
 }
 
-@media (max-width: 480px) {
+@media (max-width: 639px) {
   .title {
     font-size: 0.95rem;
   }
@@ -96,6 +96,17 @@
   }
 
   .actions :global(.ock-ConnectWallet_Container) {
-    max-width: 44px;
+    max-width: none;
+    overflow: visible;
+  }
+
+  .actions :global(button[data-testid="ockConnectWallet_Connected"]) {
+    padding: 0.25rem;
+    min-width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
   }
 }

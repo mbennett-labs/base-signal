@@ -164,6 +164,7 @@ export default function BTCBattle() {
   const [isDarkMode, setIsDarkMode] = useState(true);
   const [tipKey, setTipKey] = useState(0);
 
+  const [showWalletPicker, setShowWalletPicker] = useState(false);
   const [farcasterLoading, setFarcasterLoading] = useState(false);
   
   // TA Summary state
@@ -490,15 +491,32 @@ const fetchPrice = useCallback(async () => {
               </WalletDropdown>
             </Wallet>
           </span>
-          {isConnected ? (
-            <button className="wallet-mobile" onClick={() => disconnect()} style={{ padding: '6px 10px', fontSize: 11, fontWeight: 600, background: 'rgba(34,197,94,0.15)', color: '#4ade80', border: '1px solid rgba(34,197,94,0.3)', borderRadius: 8, cursor: 'pointer', whiteSpace: 'nowrap', fontFamily: "'Share Tech Mono', monospace" }}>
-              {address?.slice(0, 6)}...{address?.slice(-4)}
-            </button>
-          ) : (
-            <button className="wallet-mobile" onClick={() => connectors[0] && connect({ connector: connectors[0] })} style={{ padding: '6px 10px', fontSize: 11, fontWeight: 600, background: 'rgba(0,82,255,0.2)', color: '#5b9aff', border: '1px solid rgba(0,82,255,0.4)', borderRadius: 8, cursor: 'pointer', whiteSpace: 'nowrap' }}>
-              Connect
-            </button>
-          )}
+          <div className="wallet-mobile" style={{ position: 'relative' }}>
+            {isConnected ? (
+              <button onClick={() => disconnect()} style={{ padding: '6px 10px', fontSize: 11, fontWeight: 600, background: 'rgba(34,197,94,0.15)', color: '#4ade80', border: '1px solid rgba(34,197,94,0.3)', borderRadius: 8, cursor: 'pointer', whiteSpace: 'nowrap', fontFamily: "'Share Tech Mono', monospace" }}>
+                {address?.slice(0, 6)}...{address?.slice(-4)}
+              </button>
+            ) : (
+              <>
+                <button onClick={() => setShowWalletPicker(!showWalletPicker)} style={{ padding: '6px 10px', fontSize: 11, fontWeight: 600, background: 'rgba(0,82,255,0.2)', color: '#5b9aff', border: '1px solid rgba(0,82,255,0.4)', borderRadius: 8, cursor: 'pointer', whiteSpace: 'nowrap' }}>
+                  Connect
+                </button>
+                {showWalletPicker && (
+                  <>
+                    <div className="wallet-picker-backdrop" onClick={() => setShowWalletPicker(false)} />
+                    <div className="wallet-picker">
+                      {connectors.map((c) => (
+                        <button key={c.uid} onClick={() => { connect({ connector: c }); setShowWalletPicker(false); }} className="wallet-picker-item">
+                          {c.icon && <img src={c.icon} alt="" width={20} height={20} style={{ borderRadius: 4 }} />}
+                          <span>{c.name}</span>
+                        </button>
+                      ))}
+                    </div>
+                  </>
+                )}
+              </>
+            )}
+          </div>
           <div className="header-live" style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 11, color: theme.textMuted }}>
             <span style={{ width: 8, height: 8, background: '#4ade80', borderRadius: '50%', animation: 'pulse 1.5s ease-in-out infinite' }} />
             LIVE
@@ -1045,7 +1063,46 @@ const fetchPrice = useCallback(async () => {
         .wallet-mobile { display: none !important; }
         @media (max-width: 639px) {
           .wallet-desktop { display: none !important; }
-          .wallet-mobile { display: inline-flex !important; }
+          .wallet-mobile { display: block !important; position: relative; }
+        }
+        .wallet-picker-backdrop {
+          position: fixed;
+          inset: 0;
+          z-index: 199;
+        }
+        .wallet-picker {
+          position: absolute;
+          top: calc(100% + 6px);
+          right: 0;
+          z-index: 200;
+          min-width: 180px;
+          background: rgba(15, 23, 42, 0.97);
+          border: 1px solid rgba(255,255,255,0.12);
+          border-radius: 10px;
+          padding: 4px;
+          backdrop-filter: blur(16px);
+          box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+        }
+        .wallet-picker-item {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          width: 100%;
+          padding: 10px 12px;
+          font-size: 13px;
+          font-weight: 500;
+          color: #e2e8f0;
+          background: transparent;
+          border: none;
+          border-radius: 8px;
+          cursor: pointer;
+          text-align: left;
+        }
+        .wallet-picker-item:hover {
+          background: rgba(255,255,255,0.08);
+        }
+        .wallet-picker-item:active {
+          background: rgba(0,82,255,0.2);
         }
 
         /* Tablet and below (768px) */

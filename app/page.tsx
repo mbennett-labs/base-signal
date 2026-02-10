@@ -6,7 +6,7 @@ import { useMiniKit, useAddFrame, useComposeCast } from '@coinbase/onchainkit/mi
 import { Transaction, TransactionButton, TransactionToast, TransactionToastIcon, TransactionToastLabel, TransactionToastAction } from '@coinbase/onchainkit/transaction';
 import { ConnectWallet, Wallet, WalletDropdown, WalletDropdownDisconnect } from '@coinbase/onchainkit/wallet';
 import { Address, Avatar, Name, Identity } from '@coinbase/onchainkit/identity';
-import { useAccount, useConnect, useDisconnect } from 'wagmi';
+import { useAccount } from 'wagmi';
 import { encodeFunctionData } from 'viem';
 import { base } from 'wagmi/chains';
 
@@ -133,8 +133,6 @@ export default function BTCBattle() {
   const addFrame = useAddFrame();
   const { composeCastAsync } = useComposeCast();
   const { address, isConnected } = useAccount();
-  const { connect, connectors } = useConnect();
-  const { disconnect } = useDisconnect();
 
   const tipCalls = useMemo(() => [{
     to: USDC_BASE,
@@ -164,7 +162,6 @@ export default function BTCBattle() {
   const [isDarkMode, setIsDarkMode] = useState(true);
   const [tipKey, setTipKey] = useState(0);
 
-  const [showWalletPicker, setShowWalletPicker] = useState(false);
   const [farcasterLoading, setFarcasterLoading] = useState(false);
   
   // TA Summary state
@@ -482,7 +479,7 @@ const fetchPrice = useCallback(async () => {
             <svg width="14" height="14" viewBox="0 0 111 111" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="55.5" cy="55.5" r="55.5" fill="#0052FF"/><path d="M55.4 93.3c20.9 0 37.9-17 37.9-37.9S76.3 17.5 55.4 17.5c-19.5 0-35.6 14.8-37.6 33.8h49.8v11.2H17.8c2 19 18.1 30.8 37.6 30.8z" fill="white"/></svg>
             <span className="header-base-text">Base</span>
           </span>
-          <span className="wallet-desktop">
+          <div style={{ maxWidth: 160, overflow: 'visible', flexShrink: 0 }}>
             <Wallet>
               <ConnectWallet><Avatar /><Name /></ConnectWallet>
               <WalletDropdown>
@@ -490,29 +487,6 @@ const fetchPrice = useCallback(async () => {
                 <WalletDropdownDisconnect />
               </WalletDropdown>
             </Wallet>
-          </span>
-          <div className="wallet-mobile" style={{ position: 'relative' }}>
-            {isConnected ? (
-              <button onTouchEnd={(e) => { e.preventDefault(); disconnect(); }} onClick={() => disconnect()} style={{ padding: '6px 10px', fontSize: 11, fontWeight: 600, background: 'rgba(34,197,94,0.15)', color: '#4ade80', border: '1px solid rgba(34,197,94,0.3)', borderRadius: 8, cursor: 'pointer', whiteSpace: 'nowrap', fontFamily: "'Share Tech Mono', monospace" }}>
-                {address?.slice(0, 6)}...{address?.slice(-4)}
-              </button>
-            ) : (
-              <>
-                <button onTouchEnd={(e) => { e.preventDefault(); if (connectors.length === 1) { connect({ connector: connectors[0] }); } else { setShowWalletPicker(v => !v); } }} onClick={() => { if (connectors.length === 1) { connect({ connector: connectors[0] }); } else { setShowWalletPicker(v => !v); } }} style={{ padding: '6px 10px', fontSize: 11, fontWeight: 600, background: 'rgba(0,82,255,0.2)', color: '#5b9aff', border: '1px solid rgba(0,82,255,0.4)', borderRadius: 8, cursor: 'pointer', whiteSpace: 'nowrap' }}>
-                  Connect
-                </button>
-                {showWalletPicker && connectors.length > 1 && (
-                  <div style={{ position: 'absolute', top: '100%', right: 0, marginTop: 4, zIndex: 200, minWidth: 170, background: '#0f172a', border: '1px solid #334155', borderRadius: 8, padding: 4 }}>
-                    {connectors.map((c) => (
-                      <button key={c.uid} onTouchEnd={(e) => { e.preventDefault(); connect({ connector: c }); setShowWalletPicker(false); }} onClick={() => { connect({ connector: c }); setShowWalletPicker(false); }} style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', padding: '10px 12px', fontSize: 13, color: '#e2e8f0', background: 'none', border: 'none', borderRadius: 6, cursor: 'pointer', textAlign: 'left' }}>
-                        {c.icon && <img src={c.icon} alt="" width={20} height={20} style={{ borderRadius: 4 }} />}
-                        {c.name}
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </>
-            )}
           </div>
           <div className="header-live" style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 11, color: theme.textMuted }}>
             <span style={{ width: 8, height: 8, background: '#4ade80', borderRadius: '50%', animation: 'pulse 1.5s ease-in-out infinite' }} />
@@ -1053,14 +1027,6 @@ const fetchPrice = useCallback(async () => {
         }
         .app-credits {
           padding-bottom: max(8px, env(safe-area-inset-bottom)) !important;
-        }
-
-        /* Wallet: OnchainKit on desktop, custom button on mobile */
-        .wallet-desktop { display: inline-flex; }
-        .wallet-mobile { display: none !important; }
-        @media (max-width: 639px) {
-          .wallet-desktop { display: none !important; }
-          .wallet-mobile { display: block !important; position: relative; }
         }
 
         /* Tablet and below (768px) */

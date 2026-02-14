@@ -39,3 +39,20 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+# Security - NEVER commit these (added by security audit)
+.env
+.env.*
+!.env.example
+*.key
+*.pem
+*.p12
+*.pfx
+credentials/
+*.secret
+id_rsa
+id_ed25519
+
+# Databases
+*.db
+*.sqlite
+*.sqlite3

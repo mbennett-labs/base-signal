@@ -4,8 +4,8 @@ export async function POST(request: NextRequest) {
   try {
     const { timeframe, marketData } = await request.json();
 
-    const apiKey = process.env.ANTHROPIC_API_KEY;
-    
+    const apiKey = process.env.OPENROUTER_API_KEY;
+
     if (!apiKey) {
       return NextResponse.json(
         { error: 'API key not configured' },
@@ -38,15 +38,16 @@ Provide a ${timeframe === '4h' ? '3-4' : timeframe === 'daily' ? '4-5' : '5-6'} 
 Keep it professional but accessible. No fluff - traders want quick, useful insights.
 Do NOT use markdown formatting, asterisks, or bullet points. Write in plain prose paragraphs.`;
 
-    const response = await fetch('https://api.anthropic.com/v1/messages', {
+    const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'x-api-key': apiKey,
-        'anthropic-version': '2023-06-01'
+        'Authorization': `Bearer ${apiKey}`,
+        'HTTP-Referer': 'https://btc-battle.vercel.app',
+        'X-Title': 'BTC Battle TA'
       },
       body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
+        model: 'anthropic/claude-haiku-4-5',
         max_tokens: 500,
         messages: [
           {
@@ -59,7 +60,7 @@ Do NOT use markdown formatting, asterisks, or bullet points. Write in plain pros
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error('Anthropic API error:', errorText);
+      console.error('OpenRouter API error:', errorText);
       return NextResponse.json(
         { error: 'Failed to generate summary' },
         { status: response.status }
@@ -67,7 +68,7 @@ Do NOT use markdown formatting, asterisks, or bullet points. Write in plain pros
     }
 
     const data = await response.json();
-    const summary = data.content?.[0]?.text || 'Unable to generate summary';
+    const summary = data.choices?.[0]?.message?.content || 'Unable to generate summary';
 
     return NextResponse.json({ summary, timeframe });
 

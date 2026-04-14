@@ -47,7 +47,7 @@ Do NOT use markdown formatting, asterisks, or bullet points. Write in plain pros
         'X-Title': 'BTC Battle TA'
       },
       body: JSON.stringify({
-        model: 'anthropic/claude-haiku-4-5',
+        model: 'deepseek/deepseek-chat',
         max_tokens: 500,
         messages: [
           {
